@@ -1,4 +1,4 @@
 export interface IDatabase {
-    initProviders: (params: any) => void
-    connectToDatabases: () => void
+    initProviders: () => void
+    connectToDatabases: () => Promise<any>
 }
