@@ -4,17 +4,34 @@ import { DatabaseService } from "@services/database/database.service";
 @Controller('chemicals')
 export class ChemicalsController {
 
+    private areAllDBReady = false
+
     constructor(private readonly database: DatabaseService) {
-        this.database.initProviders()
-        this.database.connectToDatabases()
-            .then(result => {
-            })
-            .catch((err) => {
-            })
+        this.initDB()
+    }
+
+    initDB = async () => {
+        try {
+            await this.database.connectToDatabases()
+            this.areAllDBReady = true
+        } catch (e) {
+            this.areAllDBReady = false
+        }
+    }
+
+    private areDBReady = () => {
+        if (!this.areAllDBReady) {
+            console.error(` Databases aren't ready`)
+        }
+        return this.areAllDBReady
     }
 
     @Get()
     getChemicals(): string {
-        return 'all chemicals'
+        if (this.areDBReady()) {
+            return 'all chemicals'
+        }
+
+        return ':('
     }
 }

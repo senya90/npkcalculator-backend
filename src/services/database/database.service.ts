@@ -18,11 +18,10 @@ export class DatabaseService implements IDatabase {
         this.userProvider = databaseProvider
     }
 
-    initProviders(): void {
-    }
-
     connectToDatabases(): Promise<any> {
-        return this.chemicalProvider.connect(databaseConfig.databaseName, databaseConfig.databaseUrl)
+        return Promise.all([
+            this.chemicalProvider.connect(databaseConfig.databaseName, databaseConfig.databaseUrl)
+        ])
     }
 
 
