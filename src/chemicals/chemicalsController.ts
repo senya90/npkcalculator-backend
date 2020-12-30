@@ -27,11 +27,13 @@ export class ChemicalsController {
     }
 
     @Get()
-    getChemicals(): string {
+    getChemicals(): any {
         if (this.areDBReady()) {
-            return 'all chemicals'
+            return this.database.chemicalProvider.getChemicals()
+
         }
 
+        // TODO: make errors handlers
         return ':('
     }
 }

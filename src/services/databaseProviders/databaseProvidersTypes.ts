@@ -5,7 +5,7 @@ export interface IDatabaseProvider {
 }
 
 export interface IChemicalDatabaseProvider extends IDatabaseProvider {
-    getChemicals: () => Promise<ChemicalUnit>
+    getChemicals: () => Promise<ChemicalUnit[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

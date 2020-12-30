@@ -13,6 +13,7 @@
         "baseUrl": "./",
         "paths": {
             "@models/*": ["src/models/*"],
+            "@dto/*": ["src/dto/*"],
             "@helpers/*": ["src/helpers/*"],
             "@services/*": ["src/services/*"]
         }

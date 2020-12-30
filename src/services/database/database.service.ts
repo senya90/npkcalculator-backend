@@ -4,7 +4,7 @@ import {
     IChemicalDatabaseProvider,
     IUserDatabaseProvider
 } from "../databaseProviders/databaseProvidersTypes";
-import { SqliteDatabaseProvider } from "@services/databaseProviders/sqliteDatabaseProvider";
+import { SqliteDatabaseProvider } from "@services/databaseProviders/sqliteDatabaseProvider/sqliteDatabaseProvider";
 import { databaseConfig } from 'src/config/databaseConfig';
 
 @Injectable()

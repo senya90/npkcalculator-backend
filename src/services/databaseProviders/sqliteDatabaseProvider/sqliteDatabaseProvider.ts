@@ -1,6 +1,7 @@
-import { ChemicalUnit } from "@models/chemicalUnit";
-import { IChemicalDatabaseProvider, IUserDatabaseProvider } from "./databaseProvidersTypes";
+import { IChemicalDatabaseProvider, IUserDatabaseProvider } from "../databaseProvidersTypes";
 import {Database, OPEN_READWRITE} from 'sqlite3'
+import { TABLES } from "@services/databaseProviders/tables";
+import { ChemicalUnit } from "@models/chemicalUnit";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -21,8 +22,25 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getChemicals(): Promise<ChemicalUnit> {
-        return Promise.resolve(undefined);
+    getChemicals(): Promise<ChemicalUnit[]> {
+        return new Promise<ChemicalUnit[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.CHEMICAL_UNIT}`
+
+            this.database.all(sql, (error, chemicals: any[]) => {
+                if (error) {
+                    reject(error)
+                    return
+                }
+
+                const chemicalUnits: ChemicalUnit[] = chemicals.map(chemical => ({
+                    id: chemical.id,
+                    name: chemical.name,
+                    molar: chemical.molar
+                }))
+
+                resolve(chemicalUnits)
+            })
+        })
     }
 
     getUser(): Promise<any> {
