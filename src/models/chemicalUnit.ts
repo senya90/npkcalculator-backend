@@ -1,4 +1,4 @@
-import {IdGenerator} from "../helpers/idGenerator/IdGenerator";
+import {IdGenerator} from "@helpers/idGenerator/IdGenerator";
 
 export class ChemicalUnit {
     id: string

@@ -1,11 +1,11 @@
-import { ChemicalUnit } from "@models/chemicalUnit";
+import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
 
 export interface IDatabaseProvider {
     connect: (databaseName: string, databaseUrl: string) => Promise<any>
 }
 
 export interface IChemicalDatabaseProvider extends IDatabaseProvider {
-    getChemicals: () => Promise<ChemicalUnit[]>
+    getChemicals: () => Promise<ChemicalUnitDto[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
