@@ -1,9 +1,8 @@
 import { IChemicalDatabaseProvider, IUserDatabaseProvider } from "../databaseProvidersTypes";
-import {Database, OPEN_READWRITE} from 'sqlite3'
+import { Database, OPEN_READWRITE } from "sqlite3";
 import { TABLES } from "@services/databaseProviders/tables";
 import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
-import { UserDB, UserRegistration } from "@dto/userDTO";
-import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
+import { UserDB } from "@dto/userDTO";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -13,12 +12,12 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             const path = `${databaseUrl}/${databaseName}`
             const database = new Database(path, OPEN_READWRITE, (err) => {
                 if (err) {
-                    console.error('SQLite connection error', err);
+                    console.error("SQLite connection error", err)
                     reject(err)
                     return
                 }
                 this.database = database
-                console.log('SQLite connection success');
+                console.log("SQLite connection success")
                 resolve(this.database)
             })
         })
@@ -51,15 +50,17 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     registerUser(user: UserDB): Promise<any> {
         return new Promise<any>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.USER}(id, login, password, created, roleID, salt, nick) VALUES (?, ?, ?, ?, ?, ?, ?)`
 
+            this.database.run(sql,
+                [user.id, user.login, user.password, user.created, user.roleID, user.salt, user.nick],
+                function(err, result) {
+                    if (err) {
+                        return reject(err)
+                    }
 
-            resolve('1')
-
+                    return resolve(result)
+                })
         })
-    }
-
-    private _getNowTimeSeconds = () => {
-        const MILLISECONDS_TO_SECONDS = 1000
-        return new Date().valueOf() / MILLISECONDS_TO_SECONDS
     }
 }
