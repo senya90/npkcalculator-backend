@@ -11,4 +11,13 @@ import { UserController } from "./user/user.controller";
     providers: [AppService, DatabaseService]
 })
 export class AppModule {
+    constructor(private readonly database: DatabaseService) {
+        this.database.connectToDatabases()
+            .then(() => {
+                console.log('App. Successful connection to the database')
+            })
+            .catch(err => {
+                console.error('App has not connected to the database', err)
+            })
+    }
 }

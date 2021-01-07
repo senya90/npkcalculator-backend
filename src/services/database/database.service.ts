@@ -11,6 +11,7 @@ import { databaseConfig } from 'src/config/databaseConfig';
 export class DatabaseService implements IDatabase {
     chemicalProvider: IChemicalDatabaseProvider
     userProvider: IUserDatabaseProvider
+    private isDBConnected = false
 
     constructor() {
         const databaseProvider = new SqliteDatabaseProvider()
@@ -22,6 +23,19 @@ export class DatabaseService implements IDatabase {
         return Promise.all([
             this.chemicalProvider.connect(databaseConfig.databaseName, databaseConfig.databaseUrl)
         ])
+            .then(connects => {
+                this.isDBConnected = true
+                return connects
+            })
+            .catch(err => {
+                this.isDBConnected = false
+                console.error('Database connection error', err);
+                return err
+            })
+    }
+
+    isReady(): boolean {
+        return this.isDBConnected
     }
 
 
