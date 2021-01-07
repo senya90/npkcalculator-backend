@@ -1,4 +1,5 @@
 import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
+import { UserRegistration } from "@dto/userDTO";
 
 export interface IDatabaseProvider {
     connect: (databaseName: string, databaseUrl: string) => Promise<any>
@@ -10,5 +11,5 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
     getUser: () => Promise<any>
-    registerUser: () => Promise<any>
+    registerUser: (user: UserRegistration) => Promise<any>
 }

@@ -2,6 +2,8 @@ import { IChemicalDatabaseProvider, IUserDatabaseProvider } from "../databasePro
 import {Database, OPEN_READWRITE} from 'sqlite3'
 import { TABLES } from "@services/databaseProviders/tables";
 import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
+import { UserDB, UserRegistration } from "@dto/userDTO";
+import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -47,7 +49,17 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         return Promise.resolve(undefined);
     }
 
-    registerUser(): Promise<any> {
-        return Promise.resolve(undefined);
+    registerUser(user: UserDB): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+
+
+            resolve('1')
+
+        })
+    }
+
+    private _getNowTimeSeconds = () => {
+        const MILLISECONDS_TO_SECONDS = 1000
+        return new Date().valueOf() / MILLISECONDS_TO_SECONDS
     }
 }
