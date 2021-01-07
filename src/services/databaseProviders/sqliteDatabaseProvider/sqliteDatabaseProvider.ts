@@ -47,7 +47,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         return Promise.resolve(undefined);
     }
 
-
-
-
+    registerUser(): Promise<any> {
+        return Promise.resolve(undefined);
+    }
 }

@@ -2,8 +2,8 @@
 /dist
 /node_modules
 
-# config
-config
+# config.json
+config.json
 
 # Logs
 logs

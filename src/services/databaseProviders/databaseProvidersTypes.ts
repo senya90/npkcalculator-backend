@@ -10,4 +10,5 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
     getUser: () => Promise<any>
+    registerUser: () => Promise<any>
 }
