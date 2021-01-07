@@ -18,15 +18,11 @@ export class UserController {
         if (this.database.isReady()) {
             try {
                 const role = await this.database.userProvider.getRoleByName(ROLES.USER)
-                if (!role || !role.id) {
-                    throw new Error('Registration role error')
-                }
-
                 const userForDB: UserDB = await this.registrationService.prepareUserForDB(body, role.id)
                 return await this.database.userProvider.registerUser(userForDB)
             } catch (e) {
                 // TODO: error object {error:{}, data: {}, status: 000}
-                console.log(e.message)
+                console.log(`Registration error: ${e.message}`)
                 return ':('
             }
         }

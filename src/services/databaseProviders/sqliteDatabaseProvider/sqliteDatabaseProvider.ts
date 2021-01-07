@@ -70,16 +70,21 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         return new Promise<any>((resolve, reject) => {
             const sql = `SELECT id, name FROM ${TABLES.ROLE} WHERE name = ?`
 
-            this.database.get(sql, [roleName], (err, row) => {
+            this.database.get(sql, [roleName], (err, role) => {
                 if (err) {
                     return reject(err)
                 }
-                const role: RoleDB = {
-                    id: row.id,
-                    name: row.name
+
+                if (!role || !role.id) {
+                    return reject({message: 'role not found'})
                 }
 
-                return resolve(role)
+                const foundROle: RoleDB = {
+                    id: role.id,
+                    name: role.name
+                }
+
+                return resolve(foundROle)
             })
         })
     }
