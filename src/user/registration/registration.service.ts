@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt'
 import { Injectable } from '@nestjs/common';
-import { UserDB, UserRegistration } from "@dto/userDTO";
+import { UserDB, UserRegistration } from "@dto/user/userDTO";
 import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
 
 
@@ -8,7 +8,7 @@ import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
 export class RegistrationService {
     private SALT_ROUNDS = 11
 
-    async prepareUserForDB(user :UserRegistration): Promise<UserDB> {
+    async prepareUserForDB(user :UserRegistration, roleID: string): Promise<UserDB> {
         const salt = await this._generateSalt()
         const advancedSalt = await this._getAdvancedSaltFromConfig()
         const hashedPassword = await this._hashPassword(user.password, salt, advancedSalt)
@@ -19,7 +19,7 @@ export class RegistrationService {
             password: hashedPassword,
             created: this._getNowTimeSeconds(),
             nick: null,
-            roleID: '22e44944-d3d2-4830-b819-c095e846fed7',
+            roleID: roleID,
             salt: salt
         }
     }

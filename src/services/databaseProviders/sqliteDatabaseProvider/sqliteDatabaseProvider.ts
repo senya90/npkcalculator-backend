@@ -2,7 +2,9 @@ import { IChemicalDatabaseProvider, IUserDatabaseProvider } from "../databasePro
 import { Database, OPEN_READWRITE } from "sqlite3";
 import { TABLES } from "@services/databaseProviders/tables";
 import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
-import { UserDB } from "@dto/userDTO";
+import { UserDB } from "@dto/user/userDTO";
+import { TRole } from "@models/role";
+import { RoleDB } from "@dto/user/roleDTO";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -63,4 +65,24 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 })
         })
     }
+
+    getRoleByName(roleName: TRole): Promise<RoleDB> {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `SELECT id, name FROM ${TABLES.ROLE} WHERE name = ?`
+
+            this.database.get(sql, [roleName], (err, row) => {
+                if (err) {
+                    return reject(err)
+                }
+                const role: RoleDB = {
+                    id: row.id,
+                    name: row.name
+                }
+
+                return resolve(role)
+            })
+        })
+    }
+
+
 }
