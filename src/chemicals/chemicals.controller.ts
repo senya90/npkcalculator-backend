@@ -1,5 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
+import { HttpResponse } from "@models/httpResponse";
+import { HelperResponse } from "@helpers/helperResponse";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -8,12 +10,12 @@ export class ChemicalsController {
     }
 
     @Get()
-    getChemicals(): any {
+    async getChemicals(): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            return this.database.chemicalProvider.getChemicals()
+            const chemicals = await this.database.chemicalProvider.getChemicals()
+            return HelperResponse.getSuccessResponse(chemicals)
         }
 
-        // TODO: make errors handlers
-        return ':('
+        return HelperResponse.getDBError()
     }
 }
