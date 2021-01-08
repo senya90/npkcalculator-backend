@@ -89,5 +89,26 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    getUserByLogin(login: string): Promise<UserDB | null> {
+        return new Promise<UserDB | null>((resolve, reject) => {
+            const sql = `SELECT * from ${TABLES.USER} WHERE login = ?`
 
+            this.database.get(sql, [login], (err, user) => {
+                if (err) {
+                    return reject(err)
+                }
+
+                if (!user) {
+                    return resolve(null)
+                }
+
+                const userDB: UserDB = {
+                    ...user
+                }
+
+                return resolve(userDB)
+            })
+
+        })
+    }
 }

@@ -3,6 +3,13 @@ export type UserRegistration = {
     password: string
 }
 
+export type UserDTO = {
+    id: string
+    login: string
+    roleID: string
+    nick?: null | string
+}
+
 export type UserDB = {
     id: string
     login: string

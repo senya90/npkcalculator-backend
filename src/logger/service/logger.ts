@@ -3,29 +3,55 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class Logger implements LoggerService {
-    debug(message: any, context?: string): any {
 
+    private MESSAGE_TYPE = {
+        DEBUG: 'DEBUG',
+        ERROR: 'ERROR',
+        LOG: 'LOG',
+        VERBOSE: 'VERBOSE',
+        WARN: 'WARN'
+    }
+
+    debug(message: any, context?: string): any {
+        this._print(this._getFormattedRow(this.MESSAGE_TYPE.DEBUG, message), this.MESSAGE_TYPE.DEBUG)
     }
 
     error(message: any, trace?: string, context?: string): any {
+        this._print(this._getFormattedRow(this.MESSAGE_TYPE.ERROR, message), this.MESSAGE_TYPE.ERROR)
     }
 
     log(message: any, context?: string): any {
-        console.log(message)
-        this.getFormattedRow()
+        this._print(this._getFormattedRow(this.MESSAGE_TYPE.LOG, message), this.MESSAGE_TYPE.LOG)
     }
 
     verbose(message: any, context?: string): any {
+        this._print(this._getFormattedRow(this.MESSAGE_TYPE.VERBOSE, message), this.MESSAGE_TYPE.VERBOSE)
     }
 
     warn(message: any, context?: string): any {
+        this._print(this._getFormattedRow(this.MESSAGE_TYPE.WARN, message), this.MESSAGE_TYPE.WARN)
     }
 
-    getFormattedRow = (message?: any): string => {
+    private _print = (logRaw: string, messageType: string) => {
+        //  TODO: write to file
+        if (messageType === 'ERROR') {
+            console.error(logRaw)
+            return
+        }
+
+        if (messageType === 'WARN') {
+            console.warn(logRaw)
+            return
+        }
+
+        console.log(logRaw)
+    }
+
+    private _getFormattedRow = (messageType: string, message?: any, ): string => {
         const date: Date = new Date()
         const dateFormatted = this._formatDate(date)
 
-        return dateFormatted
+        return `[${dateFormatted}][${messageType}] ${message}`
 
     }
 
@@ -33,7 +59,7 @@ export class Logger implements LoggerService {
         const dateString = this._getDateString(date)
         const timeString = this._getTimeString(date)
 
-        return `[${dateString} ${timeString}]`
+        return `${dateString} ${timeString}`
     }
 
     private _getTimeString = (date: Date): string => {

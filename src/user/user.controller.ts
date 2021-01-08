@@ -1,5 +1,6 @@
-import { UserDB, UserRegistration } from "@dto/user/userDTO";
+import { UserDB, UserDTO, UserRegistration } from "@dto/user/userDTO";
 import { HelperResponse } from "@helpers/helperResponse";
+import { getClassName } from "@helpers/utils";
 import { HttpResponse } from "@models/httpResponse";
 import { ROLES } from "@models/role";
 import { Body, Post } from "@nestjs/common";
@@ -19,17 +20,28 @@ export class UserController {
 
     @Post('registration')
     async registerUser(@Body() user: UserRegistration): Promise<HttpResponse> {
-        this.logger.log('lalal')
-        return
-
         if (this.database.isReady()) {
             try {
                 const role = await this.database.userProvider.getRoleByName(ROLES.USER)
                 const userForDB: UserDB = await this.registrationService.prepareUserForDB(user, role.id)
-                const result = await this.database.userProvider.registerUser(userForDB)
-                return HelperResponse.getSuccessResponse(result)
+                await this.database.userProvider.registerUser(userForDB)
+                const createdUser = await this.database.userProvider.getUserByLogin(user.login)
+
+                if (createdUser) {
+                    const userDTO: UserDTO = {
+                        id: createdUser.id,
+                        login: createdUser.login,
+                        roleID: createdUser.roleID,
+                        nick: createdUser.nick
+                    }
+
+                    this.logger.log(`${getClassName(this)}#registerUser. User created. Login: ${userDTO.login} ID: ${userDTO.id}`)
+                    return HelperResponse.getSuccessResponse(userDTO)
+                }
+
+                return HelperResponse.getSuccessResponse({})
             } catch (e) {
-                console.log(`Registration error: ${e.message}`)
+                this.logger.error(`${getClassName(this)}#registerUser. Registration error: ${e.message}`)
                 return HelperResponse.getServerError(`Server user registration error. ${e.message}`)
             }
         }
