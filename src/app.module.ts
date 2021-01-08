@@ -5,9 +5,10 @@ import { DatabaseService } from "./services/database/database.service";
 import { ChemicalsController } from "./chemicals/chemicals.controller";
 import { UserController } from "./user/user.controller";
 import { RegistrationService } from './user/registration/registration.service';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
-    imports: [],
+    imports: [LoggerModule],
     controllers: [AppController, ChemicalsController, UserController],
     providers: [AppService, DatabaseService, RegistrationService]
 })

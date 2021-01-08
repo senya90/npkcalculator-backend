@@ -5,6 +5,7 @@ import { ROLES } from "@models/role";
 import { Body, Post } from "@nestjs/common";
 import { Controller } from '@nestjs/common';
 import { DatabaseService } from "@services/database/database.service";
+import { Logger } from "src/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
 
 @Controller('user')
@@ -12,11 +13,15 @@ export class UserController {
 
     constructor(
         private readonly database: DatabaseService,
-        private readonly registrationService: RegistrationService) {
-    }
+        private readonly registrationService: RegistrationService,
+        private readonly logger: Logger
+    ) {}
 
     @Post('registration')
     async registerUser(@Body() user: UserRegistration): Promise<HttpResponse> {
+        this.logger.log('lalal')
+        return
+
         if (this.database.isReady()) {
             try {
                 const role = await this.database.userProvider.getRoleByName(ROLES.USER)
