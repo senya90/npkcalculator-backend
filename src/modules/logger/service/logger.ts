@@ -1,8 +1,14 @@
 import { LoggerService } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
+import { FileService } from "@services/file/file.service";
 
 @Injectable()
 export class Logger implements LoggerService {
+
+    constructor(
+        private readonly fileService: FileService
+    ) {
+    }
 
     private MESSAGE_TYPE = {
         DEBUG: 'DEBUG',
@@ -32,19 +38,24 @@ export class Logger implements LoggerService {
         this._print(this._getFormattedRow(this.MESSAGE_TYPE.WARN, message), this.MESSAGE_TYPE.WARN)
     }
 
-    private _print = (logRaw: string, messageType: string) => {
-        //  TODO: write to file
-        if (messageType === 'ERROR') {
-            console.error(logRaw)
-            return
-        }
+    private _print = async (logRaw: string, messageType: string) => {
+        try {
+            await this.fileService.writeToLog(logRaw)
 
-        if (messageType === 'WARN') {
-            console.warn(logRaw)
-            return
-        }
+            if (messageType === 'ERROR') {
+                console.error(logRaw)
+                return
+            }
 
-        console.log(logRaw)
+            if (messageType === 'WARN') {
+                console.warn(logRaw)
+                return
+            }
+
+            console.log(logRaw)
+        } catch (err) {
+            console.error(`Logger print error ${err}`)
+        }
     }
 
     private _getFormattedRow = (messageType: string, message?: any, ): string => {
