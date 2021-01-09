@@ -2,8 +2,11 @@ import * as bcrypt from 'bcrypt'
 import { Injectable } from '@nestjs/common';
 import { UserDB, UserDTO, UserCredentials } from "@dto/user/userDTO";
 import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
+import * as jwt from 'jsonwebtoken'
+import { JwtHeader, SignOptions } from "jsonwebtoken";
 
 const advancedSalt = '$2b$10$ZFoe9PCdXWLcOnT46UOYEu'
+const tokenSecret = '89bf)(hg47&*83b'
 
 @Injectable()
 export class RegistrationService {
@@ -74,5 +77,46 @@ export class RegistrationService {
         const hashedInputPassword = await bcrypt.hash(inputPassword, userDB.salt)
         const doubleHashedInputPassword = await bcrypt.hash(hashedInputPassword, advancedSalt)
         return doubleHashedInputPassword === userDB.password
+    }
+
+    async generateTokens(user: UserDB) {
+        const accessPayload = {
+            userId: user.id,
+            login: user.login,
+            role: user.roleID,
+            tokenType: 'access'
+        }
+
+        const refreshPayload = {
+            ...accessPayload,
+            tokenType: 'refresh'
+        }
+
+        const accessTokenOptions: SignOptions = {
+            expiresIn: "15m",
+        }
+
+        const refreshTokenOptions: SignOptions = {
+            expiresIn: "30d",
+        }
+
+        const accessToken = await this._signToken(accessPayload, accessTokenOptions)
+        const refreshToken = await this._signToken(refreshPayload, refreshTokenOptions)
+
+        console.log(accessToken)
+        console.log(refreshToken)
+    }
+
+    private _signToken = async (payload: any, options: SignOptions): Promise<string> => {
+        return new Promise<string>((resolve, reject) => {
+            jwt.sign(payload, tokenSecret, options, (err, token) => {
+                if (err) {
+                    return reject(err)
+                }
+
+                return resolve(token)
+            })
+        })
+
     }
 }

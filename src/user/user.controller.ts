@@ -59,6 +59,8 @@ export class UserController {
 
             if (isPasswordMatches) {
                 this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
+                //TODO: generate tokens, send to the client
+                await this.registrationService.generateTokens(userDB)
                 return HelperResponse.getSuccessResponse('welcome')
             }
 
