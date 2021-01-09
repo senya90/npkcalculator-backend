@@ -53,21 +53,7 @@ export class RegistrationService {
 
     private _hashPassword = async (password: string, salt: string, advancedSalt: string): Promise<string> => {
         const enc = await bcrypt.hash(password, salt)
-        const doubleEnd = await bcrypt.hash(enc, advancedSalt)
-
-        console.log('enc', enc)
-        console.log('doubleEnd', doubleEnd)
-
-        return doubleEnd
-        // return new Promise<string>((resolve, reject) => {
-        //     bcrypt.hash(password, salt + advancedSalt, (err, encrypted: string) => {
-        //         if (err) {
-        //             return reject(err)
-        //         }
-        //
-        //         return resolve(encrypted)
-        //     })
-        // })
+        return await bcrypt.hash(enc, advancedSalt)
     }
 
     userDbToDto(user: UserDB): undefined | UserDTO {

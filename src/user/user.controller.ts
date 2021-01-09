@@ -51,15 +51,18 @@ export class UserController {
             const userDB = await this.database.userProvider.getUserByLogin(user.login)
 
             if (!userDB) {
+                this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} is not found`)
                 return HelperResponse.getAuthError(ErrorCode('Login user. User is not found').userNotFound)
             }
 
             const isPasswordMatches: boolean = await this.registrationService.isPasswordMatches(userDB, user.password)
 
             if (isPasswordMatches) {
+                this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
                 return HelperResponse.getSuccessResponse('welcome')
             }
 
+            this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} ${user.password}. Incorrect login or password`)
             return HelperResponse.getAuthError(ErrorCode().incorrectLoginPassword)
         }
 
