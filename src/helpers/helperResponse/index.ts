@@ -1,16 +1,35 @@
 import { HttpResponse } from "@models/httpResponse";
-import { ErrorResponse } from "@models/errorResponse";
+import { ErrorCode, ErrorResponse } from "@models/errorResponse";
 
 export const HelperResponse = {
-    getDBError: (message = 'Lost database connection', code = 500) => {
-        return new HttpResponse(null, new ErrorResponse(message, code), code)
-    },
-
-    getServerError: (message?: string, code = 500) => {
-        return new HttpResponse(null, new ErrorResponse(message, code), code)
-    },
-
     getSuccessResponse: (data: any, code = 200) => {
         return new HttpResponse(data, null, code)
+    },
+
+    getDBError: (code = 500) => {
+        const error = ErrorCode('Lost database connection').lostDBConnection
+        return new HttpResponse(
+            null,
+            new ErrorResponse(error.message, error.code, error.text),
+            code
+        )
+    },
+
+    getServerError: (error?: ErrorResponse, code = 500) => {
+        return new HttpResponse(
+            null,
+            new ErrorResponse(error.message, error.code, error.text),
+            code
+        )
+    },
+
+
+
+    getAuthError: (error?: ErrorResponse, code = 401) => {
+        return new HttpResponse(
+            null,
+            new ErrorResponse(error.message, error.code, error.text),
+            code
+        )
     }
 }
