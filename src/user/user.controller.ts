@@ -6,7 +6,7 @@ import { ROLES } from "@models/role";
 import { Body, Post } from "@nestjs/common";
 import { Controller } from '@nestjs/common';
 import { DatabaseService } from "@services/database/database.service";
-import { Logger } from "src/logger/service/logger";
+import { Logger } from "src/modules/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
 
 @Controller('user')

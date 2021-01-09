@@ -6,6 +6,7 @@ import {
 } from "../databaseProviders/databaseProvidersTypes";
 import { SqliteDatabaseProvider } from "@services/databaseProviders/sqliteDatabaseProvider/sqliteDatabaseProvider";
 import { databaseConfig } from 'src/config/databaseConfig';
+import { Logger } from "../../modules/logger/service/logger";
 
 @Injectable()
 export class DatabaseService implements IDatabase {
@@ -13,8 +14,10 @@ export class DatabaseService implements IDatabase {
     userProvider: IUserDatabaseProvider
     private isDBConnected = false
 
-    constructor() {
-        const databaseProvider = new SqliteDatabaseProvider()
+    constructor(
+        private readonly logger: Logger
+    ) {
+        const databaseProvider = new SqliteDatabaseProvider(this.logger)
         this.chemicalProvider = databaseProvider
         this.userProvider = databaseProvider
     }
@@ -29,8 +32,8 @@ export class DatabaseService implements IDatabase {
             })
             .catch(err => {
                 this.isDBConnected = false
-                console.error('Database connection error', err);
-                return err
+                this.logger.error(`Database connection error ${err}`, )
+                throw err
             })
     }
 

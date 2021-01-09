@@ -5,21 +5,24 @@ import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
 import { UserDB } from "@dto/user/userDTO";
 import { TRole } from "@models/role";
 import { RoleDB } from "@dto/user/roleDTO";
+import { Logger } from "@modules/logger/service/logger";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
+
+    constructor(private readonly logger: Logger) {
+    }
 
     connect(databaseName: string, databaseUrl: string): Promise<any> {
         return new Promise((resolve, reject) => {
             const path = `${databaseUrl}/${databaseName}`
             const database = new Database(path, OPEN_READWRITE, (err) => {
                 if (err) {
-                    console.error("SQLite connection error", err)
-                    reject(err)
-                    return
+                    this.logger.error(`SQLite connection error, ${err}`)
+                    return reject(err)
                 }
                 this.database = database
-                console.log("SQLite connection success")
+                this.logger.log(`SQLite connection success`)
                 resolve(this.database)
             })
         })
@@ -31,8 +34,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.all(sql, (error, chemicals: any[]) => {
                 if (error) {
-                    reject(error)
-                    return
+                    return reject(error)
                 }
 
                 const chemicalUnits: ChemicalUnitDto[] = chemicals.map(chemical => ({

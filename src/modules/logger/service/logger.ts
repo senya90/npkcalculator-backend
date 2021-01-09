@@ -6,10 +6,10 @@ export class Logger implements LoggerService {
 
     private MESSAGE_TYPE = {
         DEBUG: 'DEBUG',
-        ERROR: 'ERROR',
+        ERROR: '--ERROR--',
         LOG: 'LOG',
         VERBOSE: 'VERBOSE',
-        WARN: 'WARN'
+        WARN: '-WARN-'
     }
 
     debug(message: any, context?: string): any {
