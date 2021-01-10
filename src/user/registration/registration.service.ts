@@ -55,8 +55,8 @@ export class RegistrationService {
     }
 
     private _hashPassword = async (password: string, salt: string, advancedSalt: string): Promise<string> => {
-        const enc = await bcrypt.hash(password, salt)
-        return await bcrypt.hash(enc, advancedSalt)
+        const enc = await bcrypt.hash(password, advancedSalt)
+        return await bcrypt.hash(enc, salt)
     }
 
     userDbToDto(user: UserDB): undefined | UserDTO {
@@ -74,9 +74,8 @@ export class RegistrationService {
 
     async isPasswordMatches(userDB: UserDB, inputPassword: string): Promise<boolean> {
         const advancedSalt = await this._getAdvancedSaltFromConfig()
-        const hashedInputPassword = await bcrypt.hash(inputPassword, userDB.salt)
-        const doubleHashedInputPassword = await bcrypt.hash(hashedInputPassword, advancedSalt)
-        return doubleHashedInputPassword === userDB.password
+        const hashFromInputPassword = await this._hashPassword(inputPassword, userDB.salt, advancedSalt)
+        return hashFromInputPassword === userDB.password
     }
 
     async generateTokens(user: UserDB) {
