@@ -23,8 +23,6 @@ export const HelperResponse = {
         )
     },
 
-
-
     getAuthError: (error?: ErrorResponse, code = 401) => {
         return new HttpResponse(
             null,

@@ -48,27 +48,32 @@ export class UserController {
     @Post('login')
     async loginUser(@Body() user: UserCredentials): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            const userDB = await this.database.userProvider.getUserByLogin(user.login)
+            try {
+                const userDB = await this.database.userProvider.getUserByLogin(user.login)
 
-            if (!userDB) {
-                this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} is not found`)
-                return HelperResponse.getAuthError(ErrorCode('Login user. User is not found').userNotFound)
+                if (!userDB) {
+                    this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} is not found`)
+                    return HelperResponse.getAuthError(ErrorCode('Login user. User is not found').userNotFound)
+                }
+
+                const isPasswordMatches: boolean = await this.registrationService.isPasswordMatches(userDB, user.password)
+
+                if (isPasswordMatches) {
+                    this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
+                    const tokens = await this.registrationService.generateTokens(userDB)
+                    const savedTokens = await this.database.userProvider.saveTokensForUser(userDB, tokens)
+                    this.logger.log(`${getClassName(this)}#loginUser. savedTokens: ${JSON.stringify(savedTokens)}`)
+                    return HelperResponse.getSuccessResponse(savedTokens)
+                }
+
+                this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} ${user.password}. Incorrect login or password`)
+                return HelperResponse.getAuthError(ErrorCode().incorrectLoginPassword)
+            } catch (err) {
+                this.logger.log(`${getClassName(this)}#loginUser. Server error, ${err}`)
+                return HelperResponse.getServerError(ErrorCode().internalServerError)
             }
-
-            const isPasswordMatches: boolean = await this.registrationService.isPasswordMatches(userDB, user.password)
-
-            if (isPasswordMatches) {
-                this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
-                //TODO: generate tokens, send to the client
-                await this.registrationService.generateTokens(userDB)
-                return HelperResponse.getSuccessResponse('welcome')
-            }
-
-            this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} ${user.password}. Incorrect login or password`)
-            return HelperResponse.getAuthError(ErrorCode().incorrectLoginPassword)
         }
 
         return HelperResponse.getDBError()
-
     }
 }

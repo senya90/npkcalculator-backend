@@ -6,6 +6,8 @@ import { UserDB } from "@dto/user/userDTO";
 import { TRole } from "@models/role";
 import { RoleDB } from "@dto/user/roleDTO";
 import { Logger } from "@modules/logger/service/logger";
+import { TokensPair } from "@models/tokens";
+import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -113,4 +115,44 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
         })
     }
+
+    saveTokensForUser(user: UserDB, tokens: TokensPair): Promise<TokensPair> {
+        return new Promise<any>(async (resolve, reject) => {
+            try {
+                const sql = `INSERT INTO ${TABLES.TOKEN}(id, userID, accessToken, refreshToken) VALUES (?, ?, ?, ?)`
+                const id = IdGenerator.generate()
+                await this.clearTokenForUser(user.id)
+
+                return this.database.run(sql,
+                    [id, user.id, tokens.accessToken, tokens.refreshToken],
+                    (err) => {
+                        if (err) {
+                            return reject(err)
+                        }
+
+                        return resolve(tokens)
+                    })
+            } catch (err) {
+                return reject(err)
+            }
+        })
+    }
+
+    clearTokenForUser = (userID: string): Promise<boolean> => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.TOKEN} WHERE userID = ?`
+
+            this.database.run(sql,
+                [userID],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
+    }
+
+
+
 }

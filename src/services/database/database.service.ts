@@ -6,7 +6,7 @@ import {
 } from "../databaseProviders/databaseProvidersTypes";
 import { SqliteDatabaseProvider } from "@services/databaseProviders/sqliteDatabaseProvider/sqliteDatabaseProvider";
 import { databaseConfig } from 'src/config/databaseConfig';
-import { Logger } from "../../modules/logger/service/logger";
+import { Logger } from '@modules/logger/service/logger';
 
 @Injectable()
 export class DatabaseService implements IDatabase {

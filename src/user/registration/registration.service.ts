@@ -4,6 +4,7 @@ import { UserDB, UserDTO, UserCredentials } from "@dto/user/userDTO";
 import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
 import * as jwt from 'jsonwebtoken'
 import { JwtHeader, SignOptions } from "jsonwebtoken";
+import { TokensPair } from "@models/tokens";
 
 const advancedSalt = '$2b$10$ZFoe9PCdXWLcOnT46UOYEu'
 const tokenSecret = '89bf)(hg47&*83b'
@@ -78,16 +79,18 @@ export class RegistrationService {
         return hashFromInputPassword === userDB.password
     }
 
-    async generateTokens(user: UserDB) {
+    async generateTokens(user: UserDB): Promise<TokensPair> {
         const accessPayload = {
             userId: user.id,
             login: user.login,
             role: user.roleID,
+            timestamp: Date.now().valueOf(),
             tokenType: 'access'
         }
 
         const refreshPayload = {
             ...accessPayload,
+            timestamp: Date.now().valueOf(),
             tokenType: 'refresh'
         }
 
@@ -102,8 +105,10 @@ export class RegistrationService {
         const accessToken = await this._signToken(accessPayload, accessTokenOptions)
         const refreshToken = await this._signToken(refreshPayload, refreshTokenOptions)
 
-        console.log(accessToken)
-        console.log(refreshToken)
+        return {
+            accessToken,
+            refreshToken
+        }
     }
 
     private _signToken = async (payload: any, options: SignOptions): Promise<string> => {
