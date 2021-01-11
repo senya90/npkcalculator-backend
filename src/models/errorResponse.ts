@@ -31,6 +31,11 @@ export const ErrorCode = (text = '') => {
             code: 4,
             message: 'Internal server error',
             text
+        },
+        error: {
+            code: 5,
+            message: 'error',
+            text
         }
     }
 }

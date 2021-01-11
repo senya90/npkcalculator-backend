@@ -13,9 +13,9 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
-    getUser: () => Promise<any>
+    getUser: (userId: string) => Promise<UserDB>
     getUserByLogin: (login: string) => Promise<UserDB | null>
     registerUser: (user: UserDB) => Promise<any>
     getRoleByName: (roleName: TRole) => Promise<RoleDB>
-    saveTokensForUser: (user: UserDB, tokens: TokensPair) => Promise<TokensPair>
+    saveTokensForUser: (userId: string, tokens: TokensPair) => Promise<TokensPair>
 }

@@ -40,19 +40,15 @@ export class Logger implements LoggerService {
 
     private _print = async (logRaw: string, messageType: string) => {
         try {
-            await this.fileService.writeToLog(logRaw)
-
             if (messageType === 'ERROR') {
                 console.error(logRaw)
-                return
-            }
-
-            if (messageType === 'WARN') {
+            } else  if (messageType === 'WARN') {
                 console.warn(logRaw)
-                return
+            } else {
+                console.log(logRaw)
             }
 
-            console.log(logRaw)
+            await this.fileService.writeToLog(logRaw)
         } catch (err) {
             console.error(`Logger print error ${err}`)
         }
