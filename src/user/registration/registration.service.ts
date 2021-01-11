@@ -84,13 +84,11 @@ export class RegistrationService {
             userId: user.id,
             login: user.login,
             role: user.roleID,
-            timestamp: Date.now().valueOf(),
             tokenType: 'access'
         }
 
         const refreshPayload = {
             ...accessPayload,
-            timestamp: Date.now().valueOf(),
             tokenType: 'refresh'
         }
 
@@ -121,6 +119,25 @@ export class RegistrationService {
                 return resolve(token)
             })
         })
+    }
 
+    sanitizeToken = (token: string) => {
+        const TOKEN_PREFIX = 'Bearer '
+        if (token.indexOf(TOKEN_PREFIX) === 0) {
+            return token.replace(TOKEN_PREFIX, '')
+        }
+
+        return token
+    }
+
+    verifyToken = (token: string): Promise<any> => {
+        return new Promise<any>((resolve, reject) => {
+            jwt.verify(token, tokenSecret, (err, decode) => {
+                if (err) {
+                    return reject(err)
+                }
+                return resolve(decode)
+            })
+        })
     }
 }

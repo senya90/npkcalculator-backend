@@ -1,11 +1,9 @@
-import { UserDB, UserDTO, UserCredentials } from "@dto/user/userDTO";
+import { UserDB, UserCredentials } from "@dto/user/userDTO";
 import { HelperResponse } from "@helpers/helperResponse";
 import { getClassName } from "@helpers/utils";
 import { HttpResponse } from "@models/httpResponse";
 import { ROLES } from "@models/role";
-import { HttpStatus } from "@nestjs/common";
-import { Body, Post } from "@nestjs/common";
-import { Controller } from '@nestjs/common';
+import { Body, Post, Request, Controller } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { Logger } from "src/modules/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
@@ -61,7 +59,7 @@ export class UserController {
                 if (isPasswordMatches) {
                     this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
                     const tokens = await this.registrationService.generateTokens(userDB)
-                    const savedTokens = await this.database.userProvider.saveTokensForUser(userDB, tokens)
+                    const savedTokens = await this.database.userProvider.saveTokensForUser(userDB.id, tokens)
                     this.logger.log(`${getClassName(this)}#loginUser. savedTokens: ${JSON.stringify(savedTokens)}`)
                     return HelperResponse.getSuccessResponse(savedTokens)
                 }
@@ -70,6 +68,34 @@ export class UserController {
                 return HelperResponse.getAuthError(ErrorCode().incorrectLoginPassword)
             } catch (err) {
                 this.logger.log(`${getClassName(this)}#loginUser. Server error, ${err}`)
+                return HelperResponse.getServerError(ErrorCode().internalServerError)
+            }
+        }
+
+        return HelperResponse.getDBError()
+    }
+
+    @Post('update-tokens')
+    async updateTokens(@Request() req: any): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                let refreshToken = req.headers.authorization
+                if (!refreshToken) {
+                    this.logger.error(`${getClassName(this)}#updateTokens. Token not found ${refreshToken}`)
+                    return HelperResponse.getAuthError(ErrorCode('Token not found').error)
+                }
+
+                refreshToken = this.registrationService.sanitizeToken(refreshToken)
+                const parsedToken = await this.registrationService.verifyToken(refreshToken)
+                const userDB = await this.database.userProvider.getUser(parsedToken.userId)
+                let newTokens = await this.registrationService.generateTokens(userDB)
+                newTokens = await this.database.userProvider.saveTokensForUser(userDB.id, newTokens)
+
+                this.logger.log(`${getClassName(this)}#updateTokens. Create tokens for user ${userDB.login} ${userDB.id}`)
+                this.logger.log(`${getClassName(this)}#updateTokens. ${JSON.stringify(newTokens)}`)
+                return await HelperResponse.getSuccessResponse(newTokens)
+            } catch (err) {
+                this.logger.log(`${getClassName(this)}#updateTokens. Server error, ${err}`)
                 return HelperResponse.getServerError(ErrorCode().internalServerError)
             }
         }

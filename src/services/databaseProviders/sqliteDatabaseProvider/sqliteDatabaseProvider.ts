@@ -50,8 +50,20 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getUser(): Promise<any> {
-        return Promise.resolve(undefined);
+    getUser(userId: string): Promise<UserDB> {
+        return new Promise<UserDB>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.USER} WHERE id = ?`
+
+            this.database.get(sql,
+                [userId],
+                (err, user) => {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(user)
+                })
+        })
     }
 
     registerUser(user: UserDB): Promise<any> {
@@ -116,15 +128,15 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    saveTokensForUser(user: UserDB, tokens: TokensPair): Promise<TokensPair> {
+    saveTokensForUser(userId: string, tokens: TokensPair): Promise<TokensPair> {
         return new Promise<any>(async (resolve, reject) => {
             try {
                 const sql = `INSERT INTO ${TABLES.TOKEN}(id, userID, accessToken, refreshToken) VALUES (?, ?, ?, ?)`
                 const id = IdGenerator.generate()
-                await this.clearTokenForUser(user.id)
+                await this.clearTokenForUser(userId)
 
                 return this.database.run(sql,
-                    [id, user.id, tokens.accessToken, tokens.refreshToken],
+                    [id, userId, tokens.accessToken, tokens.refreshToken],
                     (err) => {
                         if (err) {
                             return reject(err)
@@ -152,7 +164,4 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 })
         })
     }
-
-
-
 }
