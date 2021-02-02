@@ -8,6 +8,9 @@ import { RoleDB } from "@dto/user/roleDTO";
 import { Logger } from "@modules/logger/service/logger";
 import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
+import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
+import { ChemicalAtomDB } from "@dto/chemical/chemicalAtomDTO";
+import { ChemicalComplexDB } from "@dto/chemical/chemicalComplexDTO";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -164,4 +167,14 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 })
         })
     }
+
+    addComplex(chemicalComplexDB: ChemicalComplexDB): void {
+    }
+
+    addAggregate(chemicalAggregateDB: ChemicalAggregateDB): void {
+    }
+
+    addAtom(chemicalAtom: ChemicalAtomDB): void {
+    }
+
 }

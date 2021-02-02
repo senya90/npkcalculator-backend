@@ -92,7 +92,7 @@ export class UserController {
                 newTokens = await this.database.userProvider.saveTokensForUser(userDB.id, newTokens)
 
                 this.logger.log(`${getClassName(this)}#updateTokens. Create tokens for user ${userDB.login} ${userDB.id}`)
-                this.logger.log(`${getClassName(this)}#updateTokens. ${JSON.stringify(newTokens)}`)
+                // this.logger.log(`${getClassName(this)}#updateTokens. ${JSON.stringify(newTokens)}`)
                 return await HelperResponse.getSuccessResponse(newTokens)
             } catch (err) {
                 this.logger.log(`${getClassName(this)}#updateTokens. Server error, ${err}`)
