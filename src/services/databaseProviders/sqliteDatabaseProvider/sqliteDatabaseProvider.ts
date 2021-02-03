@@ -168,7 +168,51 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    addComplex = (chemicalComplexDB: ChemicalComplexDB): void => {
+    addComplexes = (chemicalComplexesDB: ChemicalComplexDB[]): Promise<any> => {
+        const addComplexesPromises = chemicalComplexesDB.map(complex => {
+            return this._insertComplex(complex)
+        })
+
+        return Promise.all(addComplexesPromises)
+    }
+
+    private _insertComplex = (chemicalComplex: ChemicalComplexDB) => {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.CHEMICAL_COMPLEX}(id, name, userID) VALUES (?, ?, ?)`
+
+            this.database.run(sql,
+                [chemicalComplex.id, chemicalComplex.name, chemicalComplex.userID],
+                function(err, result) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(true)
+                })
+        })
+    }
+
+    deleteComplexes = (chemicalComplexesIds: string[]): Promise<any> => {
+        const deleteComplexesPromises = chemicalComplexesIds.map(complexId => {
+            return this._deleteComplex(complexId)
+        })
+
+        return Promise.all(deleteComplexesPromises)
+    }
+
+    private _deleteComplex = (complexId) => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX} WHERE id = ?`
+
+            this.database.run(sql,
+                [complexId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
     }
 
     addAggregates = (chemicalAggregatesDB: ChemicalAggregateDB[]): Promise<any>  =>{

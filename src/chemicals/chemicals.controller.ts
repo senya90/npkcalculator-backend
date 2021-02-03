@@ -3,7 +3,7 @@ import { Body, Controller, Get, Post, Request } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
-import { ChemicalComplexDTO } from "@dto/chemical/chemicalComplexDTO";
+import { ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplexDTO";
 import { ChemicalAtomDB, ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
 import { RegistrationService } from "../user/registration/registration.service";
 import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
@@ -30,9 +30,12 @@ export class ChemicalsController {
 
         if (this.database.isReady()) {
             try {
+                await this.database.chemicalProvider.deleteComplexes([chemicalComplex.id])
+                await this.database.chemicalProvider.deleteAggregations(chemicalComplex.chemicalAggregates.map(aggregation => aggregation.id))
                 const atoms: ChemicalAtomDTO[] = this._getAtomsFromComplex(chemicalComplex)
                 await this.database.chemicalProvider.deleteAtoms(atoms.map(atom => atom.id))
-                await this.database.chemicalProvider.deleteAggregations(chemicalComplex.chemicalAggregates.map(aggregation => aggregation.id))
+
+
 
                 let accessToken = req.headers.authorization
                 accessToken = this.registrationService.sanitizeToken(accessToken)
@@ -57,7 +60,14 @@ export class ChemicalsController {
                     }
                 })
 
+                const chemicalComplexDB: ChemicalComplexDB = {
+                    id: chemicalComplex.id,
+                    name: chemicalComplex.name,
+                    userID: userId
+                }
+
                 await this.database.chemicalProvider.addAggregates(aggregatesDB)
+                await this.database.chemicalProvider.addComplexes([chemicalComplexDB])
 
 
                 return HelperResponse.getSuccessResponse({})
