@@ -18,7 +18,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     constructor(private readonly logger: Logger) {
     }
 
-    connect(databaseName: string, databaseUrl: string): Promise<any> {
+    connect = (databaseName: string, databaseUrl: string): Promise<any> => {
         return new Promise((resolve, reject) => {
             const path = `${databaseUrl}/${databaseName}`
             const database = new Database(path, OPEN_READWRITE, (err) => {
@@ -33,7 +33,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getChemicals(): Promise<ChemicalUnitDto[]> {
+    getChemicals = (): Promise<ChemicalUnitDto[]> => {
         return new Promise<ChemicalUnitDto[]>((resolve, reject) => {
             const sql = `SELECT * FROM ${TABLES.CHEMICAL_UNIT}`
 
@@ -53,7 +53,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getUser(userId: string): Promise<UserDB> {
+    getUser = (userId: string): Promise<UserDB> => {
         return new Promise<UserDB>((resolve, reject) => {
             const sql = `SELECT * FROM ${TABLES.USER} WHERE id = ?`
 
@@ -69,7 +69,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    registerUser(user: UserDB): Promise<any> {
+    registerUser = (user: UserDB): Promise<any> => {
         return new Promise<any>((resolve, reject) => {
             const sql = `INSERT INTO ${TABLES.USER}(id, login, password, created, roleID, salt, nick) VALUES (?, ?, ?, ?, ?, ?, ?)`
 
@@ -85,7 +85,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getRoleByName(roleName: TRole): Promise<RoleDB> {
+    getRoleByName = (roleName: TRole): Promise<RoleDB> => {
         return new Promise<any>((resolve, reject) => {
             const sql = `SELECT id, name FROM ${TABLES.ROLE} WHERE name = ?`
 
@@ -108,7 +108,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getUserByLogin(login: string): Promise<UserDB | null> {
+    getUserByLogin = (login: string): Promise<UserDB | null> => {
         return new Promise<UserDB | null>((resolve, reject) => {
             const sql = `SELECT * from ${TABLES.USER} WHERE login = ?`
 
@@ -131,7 +131,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    saveTokensForUser(userId: string, tokens: TokensPair): Promise<TokensPair> {
+    saveTokensForUser = (userId: string, tokens: TokensPair): Promise<TokensPair> => {
         return new Promise<any>(async (resolve, reject) => {
             try {
                 const sql = `INSERT INTO ${TABLES.TOKEN}(id, userID, accessToken, refreshToken) VALUES (?, ?, ?, ?)`
@@ -168,13 +168,103 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    addComplex(chemicalComplexDB: ChemicalComplexDB): void {
+    addComplex = (chemicalComplexDB: ChemicalComplexDB): void => {
     }
 
-    addAggregate(chemicalAggregateDB: ChemicalAggregateDB): void {
+    addAggregates = (chemicalAggregatesDB: ChemicalAggregateDB[]): Promise<any>  =>{
+        const addAggregatesPromises = chemicalAggregatesDB.map(aggregate => {
+            return this._insertAggregation(aggregate)
+        })
+
+        return Promise.all(addAggregatesPromises)
     }
 
-    addAtom(chemicalAtom: ChemicalAtomDB): void {
+    private _insertAggregation = (chemicalAggregate: ChemicalAggregateDB) => {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.CHEMICAL_ATOM}(id, multiplier, userID) VALUES (?, ?, ?)`
+
+            this.database.run(sql,
+                [chemicalAggregate.id, chemicalAggregate.multiplier, chemicalAggregate.userID],
+                function(err, result) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(true)
+                })
+        })
+    }
+
+    deleteAggregations = (chemicalAggregatesIds: string[]): Promise<any> => {
+        const deleteAggregatesPromises = chemicalAggregatesIds.map(id => {
+            return this._deleteAggregate(id)
+        })
+
+        return Promise.all(deleteAggregatesPromises)
+
+    }
+
+    private _deleteAggregate = (chemicalAggregateId: string): Promise<any> => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_AGGREGATE} WHERE id = ?`
+
+            this.database.run(sql,
+                [chemicalAggregateId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
+    }
+
+
+    addAtoms = (chemicalAtoms: ChemicalAtomDB[]): Promise<any> => {
+        const addAtomsPromises = chemicalAtoms.map(atom => {
+            return this._insertAtom(atom)
+        })
+
+        return Promise.all(addAtomsPromises)
+    }
+
+    deleteAtoms = (chemicalAtomsIds: string[]): Promise<any> => {
+        const deleteAtomsPromises = chemicalAtomsIds.map(atomId => {
+            return this._deleteAtom(atomId)
+        })
+
+        return Promise.all(deleteAtomsPromises)
+    }
+
+    private _deleteAtom = (id: string) => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_ATOM} WHERE id = ?`
+
+            this.database.run(sql,
+                [id],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
+    }
+
+    private _insertAtom = (chemicalAtom: ChemicalAtomDB): Promise<any> => {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.CHEMICAL_ATOM}(id, chemicalUnitID, atomsCount, userID) VALUES (?, ?, ?, ?)`
+
+            this.database.run(sql,
+                [chemicalAtom.id, chemicalAtom.chemicalUnitID, chemicalAtom.atomsCount, chemicalAtom.userID],
+                function(err, result) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(true)
+                })
+        })
     }
 
 }

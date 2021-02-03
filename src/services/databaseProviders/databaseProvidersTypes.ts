@@ -14,8 +14,10 @@ export interface IDatabaseProvider {
 export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     getChemicals: () => Promise<ChemicalUnitDto[]>
     addComplex: (chemicalComplexDB: ChemicalComplexDB) => void
-    addAggregate: (chemicalAggregateDB: ChemicalAggregateDB) => void
-    addAtom: (chemicalAtom: ChemicalAtomDB) => void
+    addAggregates: (chemicalAggregatesDB: ChemicalAggregateDB[]) => Promise<any>
+    addAtoms: (chemicalAtoms: ChemicalAtomDB[]) => Promise<any>
+    deleteAtoms: (chemicalAtomsIds: string[]) => Promise<any>
+    deleteAggregations: (chemicalAggregatesIds: string[]) => Promise<any>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

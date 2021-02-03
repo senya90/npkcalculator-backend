@@ -16,9 +16,18 @@ export const HelperResponse = {
     },
 
     getServerError: (error?: ErrorResponse, code = 500) => {
+        if (error) {
+            return new HttpResponse(
+                null,
+                new ErrorResponse(error.message, error.code, error.text),
+                code
+            )
+        }
+
+        const errorCustom = ErrorCode('Server error').error
         return new HttpResponse(
             null,
-            new ErrorResponse(error.message, error.code, error.text),
+            new ErrorResponse(errorCustom.message, errorCustom.code, errorCustom.text),
             code
         )
     },

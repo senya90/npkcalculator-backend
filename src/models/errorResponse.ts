@@ -34,7 +34,7 @@ export const ErrorCode = (text = '') => {
         },
         error: {
             code: 5,
-            message: 'error',
+            message: 'Error',
             text
         }
     }
