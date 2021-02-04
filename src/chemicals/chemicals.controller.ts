@@ -31,17 +31,13 @@ export class ChemicalsController {
         if (this.database.isReady()) {
             try {
 
-                // TODO: delete all aggregate => atoms for complex ID. Rewrite code
-                await this.database.chemicalProvider.deleteComplexes([chemicalComplex.id])
-                const atoms: ChemicalAtomDTO[] = this._getAtomsFromComplex(chemicalComplex)
-
                 let accessToken = req.headers.authorization
                 accessToken = this.registrationService.sanitizeToken(accessToken)
                 const decodeToken = await this.registrationService.verifyToken(accessToken)
                 const userId = decodeToken.userId
 
                 await this.database.chemicalProvider.addComplexes([chemicalComplex], userId)
-                  return HelperResponse.getSuccessResponse({})
+                return HelperResponse.getSuccessResponse({})
             } catch (err) {
                 console.log('CATCH err', err)
                 return HelperResponse.getServerError()

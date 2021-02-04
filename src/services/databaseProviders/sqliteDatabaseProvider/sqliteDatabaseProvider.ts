@@ -10,7 +10,7 @@ import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
 import { ChemicalAtomDB, ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
-import { ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplexDTO";
+import { ChemicalComplex, ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplexDTO";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -168,34 +168,30 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    addComplexes = async (chemicalComplexesDB: ChemicalComplexDTO[], userId: string): Promise<any> => {
+    addComplexes = async (chemicalComplexesDTO: ChemicalComplexDTO[], userId: string): Promise<any> => {
         // await this.deleteComplexes(chemicalComplexesDB.map(complex => complex.id))
 
-        const atoms: ChemicalAtomDTO[] = []
-        chemicalComplexesDB.forEach(complex => {
-            complex.chemicalAggregates.forEach(aggregate => {
-                aggregate.atoms.forEach(atom => {
-                    atoms.push(atom)
-                })
-            })
+        // добавить комплекс (1)
+        // добавить агрегации (2)
+        // сделать связи комплекс-агрегация (3)
+        // добавить атомы (4)
+        // добавить связи агрегация - атом (5)
+
+        const chemicalComplexes = ChemicalComplex.dtoToClass(chemicalComplexesDTO)
+
+        const addComplexesPromises = chemicalComplexes.map(async complex => {
+            // (1)
+            const complexDB = complex.toChemicalComplexDB(userId)
+            await this._insertComplex(complexDB)
+
+            // (2)
+            const aggregates = complex.chemicalAggregates
         })
 
-
-        // добавить комплекс
-        // добавить агрегации
-        // сделать связи комплекс-агрегация
-        // добавить атомы
-        // добавить связи агрегация - атом
-
-
-        // const addComplexesPromises = chemicalComplexesDB.map(complex => {
-        //     return this._insertComplex(complex)
-        // })
-        //
-        // return Promise.all(addComplexesPromises)
+        return Promise.all(addComplexesPromises)
     }
 
-    private _insertComplex = (chemicalComplex: ChemicalComplexDB) => {
+    private _insertComplex = (chemicalComplex: ChemicalComplexDB): Promise<any> => {
         return new Promise<any>((resolve, reject) => {
             const sql = `INSERT INTO ${TABLES.CHEMICAL_COMPLEX}(id, name, userID) VALUES (?, ?, ?)`
 
