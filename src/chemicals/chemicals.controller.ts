@@ -30,47 +30,18 @@ export class ChemicalsController {
 
         if (this.database.isReady()) {
             try {
+
+                // TODO: delete all aggregate => atoms for complex ID. Rewrite code
                 await this.database.chemicalProvider.deleteComplexes([chemicalComplex.id])
-                await this.database.chemicalProvider.deleteAggregations(chemicalComplex.chemicalAggregates.map(aggregation => aggregation.id))
                 const atoms: ChemicalAtomDTO[] = this._getAtomsFromComplex(chemicalComplex)
-                await this.database.chemicalProvider.deleteAtoms(atoms.map(atom => atom.id))
-
-
 
                 let accessToken = req.headers.authorization
                 accessToken = this.registrationService.sanitizeToken(accessToken)
                 const decodeToken = await this.registrationService.verifyToken(accessToken)
                 const userId = decodeToken.userId
 
-                const atomsForDB: ChemicalAtomDB[] = atoms.map(atom => ({
-                    id: atom.id,
-                    userID: userId,
-                    chemicalUnitID: atom.chemicalUnit.id,
-                    atomsCount: atom.atomsCount
-
-                }))
-                const atomsResult = await this.database.chemicalProvider.addAtoms(atomsForDB)
-
-                const aggregates = chemicalComplex.chemicalAggregates
-                const aggregatesDB: ChemicalAggregateDB[] = chemicalComplex.chemicalAggregates.map(aggregate => {
-                    return {
-                        id: aggregate.id,
-                        multiplier: aggregate.multiplier,
-                        userID: userId
-                    }
-                })
-
-                const chemicalComplexDB: ChemicalComplexDB = {
-                    id: chemicalComplex.id,
-                    name: chemicalComplex.name,
-                    userID: userId
-                }
-
-                await this.database.chemicalProvider.addAggregates(aggregatesDB)
-                await this.database.chemicalProvider.addComplexes([chemicalComplexDB])
-
-
-                return HelperResponse.getSuccessResponse({})
+                await this.database.chemicalProvider.addComplexes([chemicalComplex], userId)
+                  return HelperResponse.getSuccessResponse({})
             } catch (err) {
                 console.log('CATCH err', err)
                 return HelperResponse.getServerError()

@@ -9,8 +9,8 @@ import { Logger } from "@modules/logger/service/logger";
 import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
-import { ChemicalAtomDB } from "@dto/chemical/chemicalAtomDTO";
-import { ChemicalComplexDB } from "@dto/chemical/chemicalComplexDTO";
+import { ChemicalAtomDB, ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
+import { ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplexDTO";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -168,12 +168,31 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    addComplexes = (chemicalComplexesDB: ChemicalComplexDB[]): Promise<any> => {
-        const addComplexesPromises = chemicalComplexesDB.map(complex => {
-            return this._insertComplex(complex)
+    addComplexes = async (chemicalComplexesDB: ChemicalComplexDTO[], userId: string): Promise<any> => {
+        // await this.deleteComplexes(chemicalComplexesDB.map(complex => complex.id))
+
+        const atoms: ChemicalAtomDTO[] = []
+        chemicalComplexesDB.forEach(complex => {
+            complex.chemicalAggregates.forEach(aggregate => {
+                aggregate.atoms.forEach(atom => {
+                    atoms.push(atom)
+                })
+            })
         })
 
-        return Promise.all(addComplexesPromises)
+
+        // добавить комплекс
+        // добавить агрегации
+        // сделать связи комплекс-агрегация
+        // добавить атомы
+        // добавить связи агрегация - атом
+
+
+        // const addComplexesPromises = chemicalComplexesDB.map(complex => {
+        //     return this._insertComplex(complex)
+        // })
+        //
+        // return Promise.all(addComplexesPromises)
     }
 
     private _insertComplex = (chemicalComplex: ChemicalComplexDB) => {
@@ -201,21 +220,33 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     private _deleteComplex = (complexId) => {
-        return new Promise<boolean>((resolve, reject) => {
-            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX} WHERE id = ?`
+        // START clear
+        // взять айди комплекса
+        // по связи комплекс-агрегация найти все агрегации
+        // по связи агрегация-атом взять все атомы
+        // очистить связи агрегация - атом
+        // удалить атомы
+        // очистить связи комплекс - агригация
+        // удалить агрегации
+        // удалить комплекс
+        // END clear
 
-            this.database.run(sql,
-                [complexId],
-                (err) => {
-                    if (err) {
-                        return reject(err)
-                    }
-                    return resolve(true)
-                })
-        })
+
+        // return new Promise<boolean>((resolve, reject) => {
+        //     const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX} WHERE id = ?`
+        //
+        //     this.database.run(sql,
+        //         [complexId],
+        //         (err) => {
+        //             if (err) {
+        //                 return reject(err)
+        //             }
+        //             return resolve(true)
+        //         })
+        // })
     }
 
-    addAggregates = (chemicalAggregatesDB: ChemicalAggregateDB[]): Promise<any>  =>{
+    private _addAggregates = (chemicalAggregatesDB: ChemicalAggregateDB[]): Promise<any>  =>{
         const addAggregatesPromises = chemicalAggregatesDB.map(aggregate => {
             return this._insertAggregation(aggregate)
         })
@@ -225,7 +256,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     private _insertAggregation = (chemicalAggregate: ChemicalAggregateDB) => {
         return new Promise<any>((resolve, reject) => {
-            const sql = `INSERT INTO ${TABLES.CHEMICAL_ATOM}(id, multiplier, userID) VALUES (?, ?, ?)`
+            const sql = `INSERT INTO ${TABLES.CHEMICAL_AGGREGATE}(id, multiplier, userID) VALUES (?, ?, ?)`
 
             this.database.run(sql,
                 [chemicalAggregate.id, chemicalAggregate.multiplier, chemicalAggregate.userID],
@@ -239,7 +270,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    deleteAggregations = (chemicalAggregatesIds: string[]): Promise<any> => {
+    private _deleteAggregations = (chemicalAggregatesIds: string[]): Promise<any> => {
         const deleteAggregatesPromises = chemicalAggregatesIds.map(id => {
             return this._deleteAggregate(id)
         })
@@ -264,7 +295,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
 
-    addAtoms = (chemicalAtoms: ChemicalAtomDB[]): Promise<any> => {
+    private _addAtoms = (chemicalAtoms: ChemicalAtomDB[]): Promise<any> => {
         const addAtomsPromises = chemicalAtoms.map(atom => {
             return this._insertAtom(atom)
         })
@@ -272,7 +303,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         return Promise.all(addAtomsPromises)
     }
 
-    deleteAtoms = (chemicalAtomsIds: string[]): Promise<any> => {
+    private _deleteAtoms = (chemicalAtomsIds: string[]): Promise<any> => {
         const deleteAtomsPromises = chemicalAtomsIds.map(atomId => {
             return this._deleteAtom(atomId)
         })
