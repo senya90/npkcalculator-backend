@@ -21,7 +21,7 @@ export class ChemicalComplex {
     constructor(chemicalComplex: ChemicalComplexDTO) {
         this.id = chemicalComplex.id
         this.name = chemicalComplex.name
-        this.chemicalAggregates = chemicalComplex.chemicalAggregates
+        this.chemicalAggregates = chemicalComplex.chemicalAggregates.map(aggregate => new ChemicalAggregate(aggregate))
     }
 
     getAtoms = () => {

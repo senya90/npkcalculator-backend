@@ -20,7 +20,7 @@ export class ChemicalAggregate {
     constructor(chemicalAggregateDTO: ChemicalAggregateDTO) {
         this.id = chemicalAggregateDTO.id
         this.multiplier = chemicalAggregateDTO.multiplier
-        this.atoms = [...chemicalAggregateDTO.atoms]
+        this.atoms = chemicalAggregateDTO.atoms.map(atom => new ChemicalAtom(atom))
     }
 
     toChemicalAggregateDB = (userId: string): ChemicalAggregateDB => {
