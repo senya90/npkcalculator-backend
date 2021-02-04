@@ -9,8 +9,8 @@ import { Logger } from "@modules/logger/service/logger";
 import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
-import { ChemicalAtomDB, ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
-import { ChemicalComplex, ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplexDTO";
+import { ChemicalAtomDB } from "@dto/chemical/chemicalAtomDTO";
+import { ChemicalComplex, ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
