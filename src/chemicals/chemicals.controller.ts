@@ -3,7 +3,7 @@ import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
 import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
-import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
+import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtom";
 import { RegistrationService } from "../user/registration/registration.service";
 
 @Controller('chemicals')
@@ -46,13 +46,5 @@ export class ChemicalsController {
         }
 
         return HelperResponse.getDBError()
-    }
-
-    private _getAtomsFromComplex = (chemicalComplex: ChemicalComplexDTO): ChemicalAtomDTO[] => {
-        const atoms = []
-        chemicalComplex.chemicalAggregates.forEach(aggregation => {
-            return aggregation.atoms.forEach(atom => atoms.push(atom))
-        })
-        return atoms
     }
 }

@@ -1,4 +1,4 @@
-import { ChemicalAtomDTO } from "./chemicalAtomDTO"
+import { ChemicalAtom } from "./chemicalAtom"
 
 export type ChemicalAggregateDB = {
     id: string
@@ -8,13 +8,13 @@ export type ChemicalAggregateDB = {
 
 export type ChemicalAggregateDTO = {
     id: string
-    atoms: ChemicalAtomDTO[]
+    atoms: ChemicalAtom[]
     multiplier: number
 }
 
 export class ChemicalAggregate {
     id: string
-    atoms: ChemicalAtomDTO[]
+    atoms: ChemicalAtom[]
     multiplier: number
 
     constructor(chemicalAggregateDTO: ChemicalAggregateDTO) {

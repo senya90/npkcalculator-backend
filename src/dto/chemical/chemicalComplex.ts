@@ -1,5 +1,5 @@
 import { ChemicalAggregate } from "./chemicalAggregate";
-import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
+import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtom";
 
 export type ChemicalComplexDB = {
     id: string
