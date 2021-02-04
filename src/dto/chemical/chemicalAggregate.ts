@@ -22,4 +22,12 @@ export class ChemicalAggregate {
         this.multiplier = chemicalAggregateDTO.multiplier
         this.atoms = [...chemicalAggregateDTO.atoms]
     }
+
+    toChemicalAggregateDB = (userId: string): ChemicalAggregateDB => {
+        return {
+            id: this.id,
+            multiplier: this.multiplier,
+            userID: userId
+        }
+    }
 }

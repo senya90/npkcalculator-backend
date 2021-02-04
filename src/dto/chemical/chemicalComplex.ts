@@ -1,4 +1,4 @@
-import { ChemicalAggregateDTO } from "./chemicalAggregate"
+import { ChemicalAggregate } from "./chemicalAggregate";
 import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
 
 export type ChemicalComplexDB = {
@@ -10,13 +10,13 @@ export type ChemicalComplexDB = {
 export type ChemicalComplexDTO = {
     id: string
     name: string
-    chemicalAggregates: ChemicalAggregateDTO[]
+    chemicalAggregates: ChemicalAggregate[]
 }
 
 export class ChemicalComplex {
     id: string
     name: string
-    chemicalAggregates: ChemicalAggregateDTO[]
+    chemicalAggregates: ChemicalAggregate[]
 
     constructor(chemicalComplex: ChemicalComplexDTO) {
         this.id = chemicalComplex.id

@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, Request } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
-import { ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
+import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
 import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
 import { RegistrationService } from "../user/registration/registration.service";
 
@@ -23,8 +23,10 @@ export class ChemicalsController {
     }
 
     @Post('chemical-complex')
-    async addNewComplex(@Body() chemicalComplex: ChemicalComplexDTO, @Request() req: any): Promise<HttpResponse> {
+    async addNewComplex(@Body() chemicalComplexDTO: ChemicalComplexDTO, @Request() req: any): Promise<HttpResponse> {
         // !!!TODO: CHECK AUTH before handle complex
+
+        const chemicalComplex = new ChemicalComplex(chemicalComplexDTO)
 
         if (this.database.isReady()) {
             try {
