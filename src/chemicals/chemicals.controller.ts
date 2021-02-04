@@ -1,12 +1,10 @@
-import jwt from 'jsonwebtoken'
 import { Body, Controller, Get, Post, Request } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
-import { ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
-import { ChemicalAtomDB, ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
+import { ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
+import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtomDTO";
 import { RegistrationService } from "../user/registration/registration.service";
-import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
 
 @Controller('chemicals')
 export class ChemicalsController {

@@ -8,7 +8,7 @@ import { RoleDB } from "@dto/user/roleDTO";
 import { Logger } from "@modules/logger/service/logger";
 import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
-import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregateDTO";
+import { ChemicalAggregateDB } from "@dto/chemical/chemicalAggregate";
 import { ChemicalAtomDB } from "@dto/chemical/chemicalAtomDTO";
 import { ChemicalComplex, ChemicalComplexDB, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
 
