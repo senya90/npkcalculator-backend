@@ -24,15 +24,6 @@ export class ChemicalComplex {
         this.chemicalAggregates = chemicalComplex.chemicalAggregates
     }
 
-    static dtoToClass(chemicalComplexes: ChemicalComplexDTO[]) {
-        return chemicalComplexes.map(complex => {
-            return new ChemicalComplex(complex)
-        })
-    }
-
-    getAggregates = () => {
-    }
-
     getAtoms = () => {
         const atoms: ChemicalAtomDTO[] = []
         this.chemicalAggregates.forEach(aggregate => {

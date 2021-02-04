@@ -9,7 +9,7 @@ import { Logger } from "@modules/logger/service/logger";
 import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregate, ChemicalAggregateDB } from "@dto/chemical/chemicalAggregate";
-import { ChemicalAtomDB } from "@dto/chemical/chemicalAtom";
+import { ChemicalAtom, ChemicalAtomDB } from "@dto/chemical/chemicalAtom";
 import { ChemicalComplex, ChemicalComplexDB } from "@dto/chemical/chemicalComplex";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
@@ -173,11 +173,9 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
         const addComplexesPromises = chemicalComplexes.map(async complex => {
             const complexDB = complex.toChemicalComplexDB(userId)
+            const aggregates = [...complex.chemicalAggregates]
             await this._insertComplex(complexDB)
-
-            const aggregates = complex.chemicalAggregates
             await this._addAggregates(aggregates, userId)
-
             await this._addComplexAggregatesRelations(complex, aggregates)
         })
 
@@ -260,12 +258,39 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     private _addAggregates = (chemicalAggregates: ChemicalAggregate[], userId: string): Promise<any>  =>{
-        const addAggregatesPromises = chemicalAggregates.map(aggregate => {
+        const addAggregatesPromises = chemicalAggregates.map(async aggregate => {
             const aggregateDB = aggregate.toChemicalAggregateDB(userId)
-            return this._insertAggregation(aggregateDB)
+            const atoms = [...aggregate.atoms]
+            await this._insertAggregation(aggregateDB)
+            await this._addAtoms(atoms, userId)
+            await this._addAggregateAtomsRelations(aggregate, atoms)
         })
 
         return Promise.all(addAggregatesPromises)
+    }
+
+    private _addAggregateAtomsRelations = (aggregate: ChemicalAggregate, atoms: ChemicalAtom[]) => {
+        const addRelationsPromises = atoms.map(atom => {
+            return this._insertAggregateAtomRelation(aggregate, atom)
+        })
+
+        return Promise.all(addRelationsPromises)
+    }
+
+    private _insertAggregateAtomRelation = (aggregate: ChemicalAggregate, atom: ChemicalAtom) => {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.CHEMICAL_AGGREGATE__CHEMICAL_ATOM}(id, chemicalAggregateID, chemicalAtomID) VALUES (?, ?, ?)`
+
+            this.database.run(sql,
+                [IdGenerator.generate(), aggregate.id, atom.id],
+                function(err, result) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(true)
+                })
+        })
     }
 
     private _insertAggregation = (chemicalAggregate: ChemicalAggregateDB) => {
@@ -309,9 +334,10 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
 
-    private _addAtoms = (chemicalAtoms: ChemicalAtomDB[]): Promise<any> => {
+    private _addAtoms = (chemicalAtoms: ChemicalAtom[], userId: string): Promise<any> => {
         const addAtomsPromises = chemicalAtoms.map(atom => {
-            return this._insertAtom(atom)
+            const atomDB = atom.toChemicalAtomDB(userId)
+            return this._insertAtom(atomDB)
         })
 
         return Promise.all(addAtomsPromises)

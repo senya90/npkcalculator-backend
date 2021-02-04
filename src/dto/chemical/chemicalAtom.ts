@@ -23,4 +23,13 @@ export class ChemicalAtom {
         this.atomsCount = atom.atomsCount
         this.chemicalUnit = atom.chemicalUnit
     }
+
+    toChemicalAtomDB = (userId: string): ChemicalAtomDB => {
+        return {
+            id: this.id,
+            atomsCount: this.atomsCount,
+            chemicalUnitID: this.chemicalUnit.id,
+            userID: userId
+        }
+    }
 }
