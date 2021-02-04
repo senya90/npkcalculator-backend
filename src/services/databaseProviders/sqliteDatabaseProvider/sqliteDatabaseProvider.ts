@@ -11,6 +11,7 @@ import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregate, ChemicalAggregateDB } from "@dto/chemical/chemicalAggregate";
 import { ChemicalAtom, ChemicalAtomDB } from "@dto/chemical/chemicalAtom";
 import { ChemicalComplex, ChemicalComplexDB } from "@dto/chemical/chemicalComplex";
+import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -169,7 +170,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     addComplexes = async (chemicalComplexes: ChemicalComplex[], userId: string): Promise<any> => {
-        // await this.deleteComplexes(chemicalComplexesDB.map(complex => complex.id))
+        await this.deleteComplexes(chemicalComplexes.map(complex => complex.id))
 
         const addComplexesPromises = chemicalComplexes.map(async complex => {
             const complexDB = complex.toChemicalComplexDB(userId)
@@ -223,38 +224,61 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     deleteComplexes = (chemicalComplexesIds: string[]): Promise<any> => {
-        const deleteComplexesPromises = chemicalComplexesIds.map(complexId => {
-            return this._deleteComplex(complexId)
+        const deleteComplexesPromises = chemicalComplexesIds.map(async complexId => {
+            const relations: ComplexAggregateRelation[] = await this._selectComplexAggregateRelations(complexId)
+            const usedAggregates = relations.map(relation => relation.chemicalAggregateID)
+            await this._deleteComplexAggregateRelations(complexId)
+            await this._deleteAggregations(usedAggregates)
+            await this._deleteComplex(complexId)
         })
 
         return Promise.all(deleteComplexesPromises)
     }
 
+    private _deleteComplexAggregateRelations = (complexId): Promise<any> => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX__CHEMICAL_AGGREGATE} WHERE chemicalComplexID = ?`
+
+            this.database.run(sql,
+                [complexId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
+    }
+
+    private _selectComplexAggregateRelations = (complexId: string): Promise<ComplexAggregateRelation[]> => {
+        return new Promise<ComplexAggregateRelation[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.CHEMICAL_COMPLEX__CHEMICAL_AGGREGATE} WHERE chemicalComplexID = ?`
+
+            this.database.all(sql,
+                [complexId],
+                (error, relations: ComplexAggregateRelation[]) => {
+                if (error) {
+                    return reject(error)
+                }
+
+                resolve(relations)
+            })
+        })
+    }
+
     private _deleteComplex = (complexId) => {
-        // START clear
-        // взять айди комплекса
-        // по связи комплекс-агрегация найти все агрегации
-        // по связи агрегация-атом взять все атомы
-        // очистить связи агрегация - атом
-        // удалить атомы
-        // очистить связи комплекс - агригация
-        // удалить агрегации
-        // удалить комплекс
-        // END clear
+          return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX} WHERE id = ?`
 
-
-        // return new Promise<boolean>((resolve, reject) => {
-        //     const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX} WHERE id = ?`
-        //
-        //     this.database.run(sql,
-        //         [complexId],
-        //         (err) => {
-        //             if (err) {
-        //                 return reject(err)
-        //             }
-        //             return resolve(true)
-        //         })
-        // })
+            this.database.run(sql,
+                [complexId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
     }
 
     private _addAggregates = (chemicalAggregates: ChemicalAggregate[], userId: string): Promise<any>  =>{
@@ -310,12 +334,47 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     private _deleteAggregations = (chemicalAggregatesIds: string[]): Promise<any> => {
-        const deleteAggregatesPromises = chemicalAggregatesIds.map(id => {
-            return this._deleteAggregate(id)
+        const deleteAggregatesPromises = chemicalAggregatesIds.map(async aggregateId => {
+            const relations = await this._selectAggregateAtomRelations(aggregateId)
+            const userAtomsIds = relations.map(relation => relation.chemicalAtomID)
+            await this._deleteAggregateAtomRelations(aggregateId)
+            await this._deleteAtoms(userAtomsIds)
+            return this._deleteAggregate(aggregateId)
         })
 
         return Promise.all(deleteAggregatesPromises)
 
+    }
+
+    private _deleteAggregateAtomRelations = (aggregateId: string): Promise<any> => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_AGGREGATE__CHEMICAL_ATOM} WHERE chemicalAggregateID = ?`
+
+            this.database.run(sql,
+                [aggregateId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
+    }
+
+    private _selectAggregateAtomRelations = (aggregateId): Promise<AggregateAtomRelation[]> => {
+        return new Promise<AggregateAtomRelation[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.CHEMICAL_AGGREGATE__CHEMICAL_ATOM} WHERE chemicalAggregateID = ?`
+
+            this.database.all(sql,
+                [aggregateId],
+                (error, relations: AggregateAtomRelation[]) => {
+                    if (error) {
+                        return reject(error)
+                    }
+
+                    resolve(relations)
+                })
+        })
     }
 
     private _deleteAggregate = (chemicalAggregateId: string): Promise<any> => {
