@@ -10,7 +10,7 @@ import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregate, ChemicalAggregateDB } from "@dto/chemical/chemicalAggregate";
 import { ChemicalAtom, ChemicalAtomDB } from "@dto/chemical/chemicalAtom";
-import { ChemicalComplex, ChemicalComplexDB } from "@dto/chemical/chemicalComplex";
+import { ChemicalComplex, ChemicalComplexDB, ChemicalComplexTextDB } from "@dto/chemical/chemicalComplex";
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 import { getClassName } from "@helpers/utils";
 
@@ -166,6 +166,64 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                         return reject(err)
                     }
                     return resolve(true)
+                })
+        })
+    }
+
+    addComplexesAsText(chemicalComplexes: ChemicalComplex[], userId: string): Promise<ChemicalComplex[]> {
+        const addComplexesPromises = chemicalComplexes.map(async complex => {
+            try {
+                const complexAsTextDB = complex.toChemicalComplexTextDB(userId)
+                await this._insertComplexAsText(complexAsTextDB)
+                return Promise.resolve(complex)
+            } catch (err) {
+                throw (err)
+            }
+        })
+
+        return Promise.all(addComplexesPromises)
+    }
+
+    private _insertComplexAsText(chemicalComplex: ChemicalComplexTextDB): Promise<ChemicalComplexTextDB> {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.CHEMICAL_COMPLEX_TEXT}(id, name, chemicalAggregates, userID) VALUES (?, ?, ?, ?)`
+
+            this.database.run(sql,
+                [chemicalComplex.id, chemicalComplex.name, chemicalComplex.chemicalAggregates, chemicalComplex.userID],
+                function(err, result) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(chemicalComplex)
+                })
+        })
+    }
+
+
+    deleteComplexesAsText(chemicalComplexesIds: string[]): Promise<string[]> {
+        const deleteComplexesPromises = chemicalComplexesIds.map(async complexId => {
+            try {
+                return await this._deleteComplexText(complexId)
+            } catch (err) {
+                throw err
+            }
+        })
+
+        return Promise.all(deleteComplexesPromises)
+    }
+
+    private _deleteComplexText = (complexId: string): Promise<string> => {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX_TEXT} WHERE id = ?`
+
+            this.database.run(sql,
+                [complexId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(complexId)
                 })
         })
     }

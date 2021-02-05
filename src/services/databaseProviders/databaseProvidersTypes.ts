@@ -15,12 +15,8 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     addComplexes: (chemicalComplexes: ChemicalComplex[], userId: string) => Promise<any>
     deleteComplexes: (chemicalComplexesIds: string[]) => Promise<any>
 
-    // addAggregates: (chemicalAggregatesDB: ChemicalAggregateDB[]) => Promise<any>
-    // deleteAggregations: (chemicalAggregatesIds: string[]) => Promise<any>
-
-    // addAtoms: (chemicalAtoms: ChemicalAtomDB[]) => Promise<any>
-    // deleteAtoms: (chemicalAtomsIds: string[]) => Promise<any>
-
+    addComplexesAsText: (chemicalComplexes: ChemicalComplex[], userId: string) => Promise<ChemicalComplex[]>
+    deleteComplexesAsText: (chemicalComplexesIds: string[]) => Promise<string[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

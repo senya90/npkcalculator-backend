@@ -7,6 +7,13 @@ export type ChemicalComplexDB = {
     userID: string
 }
 
+export type ChemicalComplexTextDB = {
+    id: string
+    name: string
+    chemicalAggregates: string
+    userID: string
+}
+
 export type ChemicalComplexDTO = {
     id: string
     name: string
@@ -37,6 +44,15 @@ export class ChemicalComplex {
         return {
             id: this.id,
             name: this.name,
+            userID: userId
+        }
+    }
+
+    toChemicalComplexTextDB = (userId: string): ChemicalComplexTextDB => {
+        return {
+            id: this.id,
+            name: this.name,
+            chemicalAggregates: JSON.stringify(this.chemicalAggregates),
             userID: userId
         }
     }

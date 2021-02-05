@@ -40,9 +40,16 @@ export class ChemicalsController {
                 const decodeToken = await this.registrationService.verifyToken(accessToken)
                 const userId = decodeToken.userId
 
-                await this.database.chemicalProvider.addComplexes([chemicalComplex], userId)
-                this.logger.log(`${getClassName(this)}#addNewComplex. ${chemicalComplex.name} ${chemicalComplex.id}. User: ${userId}`)
-                return HelperResponse.getSuccessResponse({})
+                const result = await this.database.chemicalProvider.deleteComplexesAsText([chemicalComplex.id])
+                this.logger.log(`${getClassName(this)}#addNewComplex. Clear complex ${JSON.stringify(result)}`)
+
+                const addedChemicalComplexes = await this.database.chemicalProvider.addComplexesAsText([chemicalComplex], userId)
+                const format = addedChemicalComplexes.map(complex => ({
+                    name: complex.name,
+                    id: complex.id
+                }))
+                this.logger.log(`${getClassName(this)}#addNewComplex. ${JSON.stringify(format)}. User: ${userId}`)
+                return HelperResponse.getSuccessResponse(addedChemicalComplexes)
             } catch (err) {
                 console.log('CATCH err', err)
                 return HelperResponse.getServerError()
