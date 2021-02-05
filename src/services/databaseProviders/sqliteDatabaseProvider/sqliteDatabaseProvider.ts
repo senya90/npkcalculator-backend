@@ -12,6 +12,7 @@ import { ChemicalAggregate, ChemicalAggregateDB } from "@dto/chemical/chemicalAg
 import { ChemicalAtom, ChemicalAtomDB } from "@dto/chemical/chemicalAtom";
 import { ChemicalComplex, ChemicalComplexDB } from "@dto/chemical/chemicalComplex";
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
+import { getClassName } from "@helpers/utils";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -171,13 +172,15 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     addComplexes = async (chemicalComplexes: ChemicalComplex[], userId: string): Promise<any> => {
         await this.deleteComplexes(chemicalComplexes.map(complex => complex.id))
+        this.logger.debug(`${getClassName(this)}#addComplexes. Clear complexes`)
 
         const addComplexesPromises = chemicalComplexes.map(async complex => {
             const complexDB = complex.toChemicalComplexDB(userId)
             const aggregates = [...complex.chemicalAggregates]
             await this._insertComplex(complexDB)
             await this._addAggregates(aggregates, userId)
-            await this._addComplexAggregatesRelations(complex, aggregates)
+            return await this._addComplexAggregatesRelations(complex, aggregates)
+
         })
 
         return Promise.all(addComplexesPromises)
@@ -229,7 +232,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             const usedAggregates = relations.map(relation => relation.chemicalAggregateID)
             await this._deleteComplexAggregateRelations(complexId)
             await this._deleteAggregations(usedAggregates)
-            await this._deleteComplex(complexId)
+            return await this._deleteComplex(complexId)
         })
 
         return Promise.all(deleteComplexesPromises)
@@ -267,7 +270,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     private _deleteComplex = (complexId) => {
-          return new Promise<boolean>((resolve, reject) => {
+        return new Promise<boolean>((resolve, reject) => {
             const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX} WHERE id = ?`
 
             this.database.run(sql,

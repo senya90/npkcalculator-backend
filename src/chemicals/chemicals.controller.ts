@@ -3,14 +3,18 @@ import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
 import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
-import { ChemicalAtomDTO } from "@dto/chemical/chemicalAtom";
 import { RegistrationService } from "../user/registration/registration.service";
+import { getClassName } from "@helpers/utils";
+import { Logger } from "@modules/logger/service/logger";
 
 @Controller('chemicals')
 export class ChemicalsController {
 
-    constructor(private readonly database: DatabaseService, private readonly registrationService: RegistrationService) {
-    }
+    constructor(
+        private readonly database: DatabaseService,
+        private readonly registrationService: RegistrationService,
+        private readonly logger: Logger
+    ) {}
 
     @Get()
     async getChemicals(): Promise<HttpResponse> {
@@ -37,6 +41,7 @@ export class ChemicalsController {
                 const userId = decodeToken.userId
 
                 await this.database.chemicalProvider.addComplexes([chemicalComplex], userId)
+                this.logger.log(`${getClassName(this)}#addNewComplex. ${chemicalComplex.name} ${chemicalComplex.id}. User: ${userId}`)
                 return HelperResponse.getSuccessResponse({})
             } catch (err) {
                 console.log('CATCH err', err)
