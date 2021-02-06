@@ -8,6 +8,7 @@ import { DatabaseService } from "@services/database/database.service";
 import { Logger } from "src/modules/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
 import { ErrorCode } from "@models/errorResponse";
+import { TokenService } from "./token/token.service";
 
 @Controller('user')
 export class UserController {
@@ -15,6 +16,7 @@ export class UserController {
     constructor(
         private readonly database: DatabaseService,
         private readonly registrationService: RegistrationService,
+        private readonly tokenService: TokenService,
         private readonly logger: Logger
     ) {}
 
@@ -58,7 +60,7 @@ export class UserController {
 
                 if (isPasswordMatches) {
                     this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
-                    const tokens = await this.registrationService.generateTokens(userDB)
+                    const tokens = await this.tokenService.generateTokens(userDB)
                     const savedTokens = await this.database.userProvider.saveTokensForUser(userDB.id, tokens)
                     this.logger.log(`${getClassName(this)}#loginUser. savedTokens: ${JSON.stringify(savedTokens)}`)
                     return HelperResponse.getSuccessResponse(savedTokens)
@@ -85,10 +87,10 @@ export class UserController {
                     return HelperResponse.getAuthError(ErrorCode('Token not found').error)
                 }
 
-                refreshToken = this.registrationService.sanitizeToken(refreshToken)
-                const parsedToken = await this.registrationService.verifyToken(refreshToken)
+                refreshToken = this.tokenService.sanitizeToken(refreshToken)
+                const parsedToken = await this.tokenService.decodeToken(refreshToken)
                 const userDB = await this.database.userProvider.getUser(parsedToken.userId)
-                let newTokens = await this.registrationService.generateTokens(userDB)
+                let newTokens = await this.tokenService.generateTokens(userDB)
                 newTokens = await this.database.userProvider.saveTokensForUser(userDB.id, newTokens)
 
                 this.logger.log(`${getClassName(this)}#updateTokens. Create tokens for user ${userDB.login} ${userDB.id}`)

@@ -7,6 +7,7 @@ import { RegistrationService } from "../user/registration/registration.service";
 import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
+import { TokenService } from "../user/token/token.service";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -14,6 +15,7 @@ export class ChemicalsController {
     constructor(
         private readonly database: DatabaseService,
         private readonly registrationService: RegistrationService,
+        private readonly tokenService: TokenService,
         private readonly logger: Logger
     ) {}
 
@@ -34,9 +36,8 @@ export class ChemicalsController {
             try {
                 const chemicalComplex = new ChemicalComplex(chemicalComplexDTO)
 
-                let accessToken = req.headers.authorization
-                accessToken = this.registrationService.sanitizeToken(accessToken)
-                const decodeToken = await this.registrationService.verifyToken(accessToken)
+                const accessToken = req.headers.authorization
+                const decodeToken = await this.tokenService.decodeToken(accessToken)
                 const userId = decodeToken.userId
 
                 const result = await this.database.chemicalProvider.deleteComplexesAsText([chemicalComplex.id])

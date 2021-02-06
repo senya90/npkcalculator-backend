@@ -8,7 +8,6 @@ import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
 import { TokensPair } from "@models/tokens";
 
 let advancedSalt;
-let tokenSecret;
 
 @Injectable()
 export class RegistrationService {
@@ -17,7 +16,6 @@ export class RegistrationService {
     constructor(private readonly configService: ConfigService) {
 
         advancedSalt = this.configService.get('ADVANCED_SALT')
-        tokenSecret = this.configService.get('TOKEN_SECRET')
     }
 
     async prepareUserForDB(user :UserCredentials, roleID: string): Promise<UserDB> {
@@ -84,76 +82,5 @@ export class RegistrationService {
         const advancedSalt = await this._getAdvancedSaltFromConfig()
         const hashFromInputPassword = await this._hashPassword(inputPassword, userDB.salt, advancedSalt)
         return hashFromInputPassword === userDB.password
-    }
-
-    async generateTokens(user: UserDB): Promise<TokensPair> {
-        const accessPayload = {
-            userId: user.id,
-            login: user.login,
-            role: user.roleID,
-            tokenType: 'access'
-        }
-
-        const refreshPayload = {
-            ...accessPayload,
-            tokenType: 'refresh'
-        }
-
-        const accessTokenOptions: SignOptions = {
-            expiresIn: "15m",
-        }
-
-        const refreshTokenOptions: SignOptions = {
-            expiresIn: "30d",
-        }
-
-        const accessToken = await this._signToken(accessPayload, accessTokenOptions)
-        const refreshToken = await this._signToken(refreshPayload, refreshTokenOptions)
-
-        return {
-            accessToken,
-            refreshToken
-        }
-    }
-
-    private _signToken = async (payload: any, options: SignOptions): Promise<string> => {
-        return new Promise<string>((resolve, reject) => {
-            jwt.sign(payload, tokenSecret, options, (err, token) => {
-                if (err) {
-                    return reject(err)
-                }
-
-                return resolve(token)
-            })
-        })
-    }
-
-    sanitizeToken = (token: string) => {
-        const TOKEN_PREFIX = 'Bearer '
-        if (token.indexOf(TOKEN_PREFIX) === 0) {
-            return token.replace(TOKEN_PREFIX, '')
-        }
-
-        return token
-    }
-
-    verifyToken = (token: string): Promise<any> => {
-        return new Promise<any>((resolve, reject) => {
-            jwt.verify(token, tokenSecret, (err, decode) => {
-                if (err) {
-                    return reject(err)
-                }
-                return resolve(decode)
-            })
-        })
-    }
-
-    isOK = async (token: string): Promise<boolean> => {
-        try {
-            await this.verifyToken(token)
-            return true
-        } catch (err) {
-            return false
-        }
     }
 }

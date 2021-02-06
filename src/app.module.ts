@@ -8,11 +8,12 @@ import { UserController } from "./user/user.controller";
 import { RegistrationService } from './user/registration/registration.service';
 import { LoggerModule } from './modules/logger/logger.module';
 import { Logger } from "./modules/logger/service/logger";
+import { TokenService } from './user/token/token.service';
 
 @Module({
     imports: [LoggerModule, ConfigModule.forRoot()],
     controllers: [AppController, ChemicalsController, UserController],
-    providers: [AppService, DatabaseService, RegistrationService]
+    providers: [AppService, DatabaseService, RegistrationService, TokenService]
 })
 export class AppModule {
     constructor(

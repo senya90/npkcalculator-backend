@@ -1,14 +1,14 @@
 import { Logger } from "@modules/logger/service/logger";
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { RegistrationService } from "../user/registration/registration.service";
 import { getClassName } from "@helpers/utils";
+import { TokenService } from "../user/token/token.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
 
     constructor(
-        private readonly registrationService: RegistrationService,
+        private readonly tokenService: TokenService,
         private readonly logger: Logger
     ) {
     }
@@ -23,7 +23,7 @@ export class AuthGuard implements CanActivate {
             return false
         }
 
-        const clearedToken = this.registrationService.sanitizeToken(token)
-        return this.registrationService.isOK(clearedToken)
+        const clearedToken = this.tokenService.sanitizeToken(token)
+        return this.tokenService.verifyToken(clearedToken)
     }
 }
