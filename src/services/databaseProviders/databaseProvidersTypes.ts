@@ -11,7 +11,7 @@ export interface IDatabaseProvider {
 export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     getChemicals: () => Promise<ChemicalUnitDto[]>
 
-    getChemicalComplexes: (userId: string) => Promise<ChemicalComplexDTO[]>
+    getChemicalComplexes: (usersIds: string[]) => Promise<ChemicalComplexDTO[]>
     addComplexes: (chemicalComplexes: ChemicalComplex[], userId: string) => Promise<any>
     deleteComplexes: (chemicalComplexesIds: string[]) => Promise<any>
 

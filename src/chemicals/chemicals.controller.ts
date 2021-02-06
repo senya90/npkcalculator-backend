@@ -44,33 +44,22 @@ export class ChemicalsController {
 
                 if (role.name === "admin") {
                     if (body.withoutAdmins) {
-                        const complexesForOnlyCurrentAdmin = await this.database.chemical.getChemicalComplexes(userId)
+                        const complexesForOnlyCurrentAdmin = await this.database.chemical.getChemicalComplexes([userId])
                         return HelperResponse.getSuccessResponse(complexesForOnlyCurrentAdmin)
                     }
 
                     const allAdmins = await this.database.user.getAllAdminUsers()
-
-                    const complexesForAllAdminPromises = allAdmins.map(async admin => {
-                        return await this.database.chemical.getChemicalComplexes(admin.id)
-                    })
-
-                    const result = await Promise.all(complexesForAllAdminPromises)
-                    const complexes: ChemicalComplexDTO[] = []
-
-                    result.forEach(arrayOfComplexes => {
-                        complexes.push(...arrayOfComplexes)
-                    })
-
-                    console.log('complexes', complexes)
-
+                    const allComplexes = await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
+                    return HelperResponse.getSuccessResponse(allComplexes)
                 }
 
-                const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes(userId)
+                const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes([userId])
 
-                // if (!body.withoutAdmins) {
-                //     const adminRoles = await this.database.user.getAdminRoles()
-                //     this.database.chemical.getChemicalComplexes()
-                // }
+                if (!body.withoutAdmins) {
+                    const allAdmins = await this.database.user.getAllAdminUsers()
+                    const allAdminComplexes = await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
+                    complexes.push(...allAdminComplexes)
+                }
 
                 return HelperResponse.getSuccessResponse(complexes)
 

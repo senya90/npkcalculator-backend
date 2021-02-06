@@ -212,19 +212,29 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    async getChemicalComplexes(userId: string): Promise<ChemicalComplexDTO[]> {
-        const complexes = await this._selectComplexesByUser(userId)
-        if (!complexes) {
-            return []
-        }
-
-        return complexes.map(complex => {
-            return {
-                id: complex.id,
-                name: complex.name,
-                chemicalAggregates: JSON.parse(complex.chemicalAggregates)
+    async getChemicalComplexes(usersIds: string[]): Promise<ChemicalComplexDTO[]> {
+        const selectComplexesPromises = usersIds.map(async userId => {
+            const complexes = await this._selectComplexesByUser(userId)
+            if (!complexes) {
+                return []
             }
+
+            return complexes.map(complex => {
+                return {
+                    id: complex.id,
+                    name: complex.name,
+                    chemicalAggregates: JSON.parse(complex.chemicalAggregates)
+                }
+            })
         })
+
+        const arrayComplexes = await Promise.all(selectComplexesPromises)
+        const allComplexes: ChemicalComplexDTO[] = []
+        arrayComplexes.forEach(complexes => {
+            allComplexes.push(...complexes)
+        })
+
+        return allComplexes
     }
 
     private _selectComplexesByUser = (userId: string): Promise<ChemicalComplexTextDB[]> => {
