@@ -8,6 +8,7 @@ import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
+import { ErrorCode, ErrorResponse } from "@models/errorResponse";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -24,6 +25,33 @@ export class ChemicalsController {
         if (this.database.isReady()) {
             const chemicals = await this.database.chemical.getChemicals()
             return HelperResponse.getSuccessResponse(chemicals)
+        }
+
+        return HelperResponse.getDBError()
+    }
+
+    @Get('chemical-complex')
+    @UseGuards(AuthGuard)
+    async getAllChemicalComplex(@Body() body: {onlyMy: boolean}, @Request() req: any): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                const accessToken = req.headers.authorization
+                const decodeToken = await this.tokenService.decodeToken(accessToken)
+                const userId = decodeToken.userId
+
+                const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes(userId)
+
+                // if (!body.onlyMy) {
+                //     const adminRoles = await this.database.user.getAdminRoles()
+                //     this.database.chemical.getChemicalComplexes()
+                // }
+
+                return HelperResponse.getSuccessResponse(complexes)
+
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#getAllChemicalComplex. err: ${err.message} ${JSON.stringify(err)}`)
+                return HelperResponse.getServerError()
+            }
         }
 
         return HelperResponse.getDBError()

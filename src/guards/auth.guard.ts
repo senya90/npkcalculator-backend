@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
         const req = context.switchToHttp().getRequest()
         const token = req.headers.authorization
         if (!token) {
-            this.logger.warn(`${getClassName(this)}#canActive. Tokes not found`)
+            this.logger.warn(`${getClassName(this)}#canActive. Tokens not found`)
             return false
         }
 

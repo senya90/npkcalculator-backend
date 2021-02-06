@@ -10,7 +10,12 @@ import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 import { ChemicalAggregate, ChemicalAggregateDB } from "@dto/chemical/chemicalAggregate";
 import { ChemicalAtom, ChemicalAtomDB } from "@dto/chemical/chemicalAtom";
-import { ChemicalComplex, ChemicalComplexDB, ChemicalComplexTextDB } from "@dto/chemical/chemicalComplex";
+import {
+    ChemicalComplex,
+    ChemicalComplexDB,
+    ChemicalComplexDTO,
+    ChemicalComplexTextDB
+} from "@dto/chemical/chemicalComplex";
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 import { getClassName } from "@helpers/utils";
 
@@ -166,6 +171,38 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                         return reject(err)
                     }
                     return resolve(true)
+                })
+        })
+    }
+
+    async getChemicalComplexes(userId: string): Promise<ChemicalComplexDTO[]> {
+        const complexes = await this._selectComplexesByUser(userId)
+        if (!complexes) {
+            return []
+        }
+
+        return complexes.map(complex => {
+            return {
+                id: complex.id,
+                name: complex.name,
+                chemicalAggregates: JSON.parse(complex.chemicalAggregates)
+            }
+        })
+    }
+
+    private _selectComplexesByUser = (userId: string): Promise<ChemicalComplexTextDB[]> => {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.CHEMICAL_COMPLEX_TEXT} WHERE userID = ?`
+
+            this.database.all(sql,
+                [userId],
+                function(err, chemicalComplexes) {
+                    if (err) {
+                        console.log('3')
+                        return reject(err)
+                    }
+
+                    return resolve(chemicalComplexes)
                 })
         })
     }
