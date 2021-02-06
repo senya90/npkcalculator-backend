@@ -24,10 +24,10 @@ export class UserController {
     async registerUser(@Body() user: UserCredentials): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                const role = await this.database.userProvider.getRoleByName(ROLES.USER)
+                const role = await this.database.user.getRoleByName(ROLES.USER)
                 const userForDB: UserDB = await this.registrationService.prepareUserForDB(user, role.id)
-                await this.database.userProvider.registerUser(userForDB)
-                const createdUser = await this.database.userProvider.getUserByLogin(user.login)
+                await this.database.user.registerUser(userForDB)
+                const createdUser = await this.database.user.getUserByLogin(user.login)
                 const userDTO = this.registrationService.userDbToDto(createdUser)
 
                 if (userDTO) {
@@ -49,7 +49,7 @@ export class UserController {
     async loginUser(@Body() user: UserCredentials): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                const userDB = await this.database.userProvider.getUserByLogin(user.login)
+                const userDB = await this.database.user.getUserByLogin(user.login)
 
                 if (!userDB) {
                     this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} is not found`)
@@ -61,7 +61,7 @@ export class UserController {
                 if (isPasswordMatches) {
                     this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
                     const tokens = await this.tokenService.generateTokens(userDB)
-                    const savedTokens = await this.database.userProvider.saveTokensForUser(userDB.id, tokens)
+                    const savedTokens = await this.database.user.saveTokensForUser(userDB.id, tokens)
                     this.logger.log(`${getClassName(this)}#loginUser. savedTokens: ${JSON.stringify(savedTokens)}`)
                     return HelperResponse.getSuccessResponse(savedTokens)
                 }
@@ -81,17 +81,16 @@ export class UserController {
     async updateTokens(@Request() req: any): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                let refreshToken = req.headers.authorization
+                const refreshToken = req.headers.authorization
                 if (!refreshToken) {
                     this.logger.error(`${getClassName(this)}#updateTokens. Token not found ${refreshToken}`)
                     return HelperResponse.getAuthError(ErrorCode('Token not found').error)
                 }
 
-                refreshToken = this.tokenService.sanitizeToken(refreshToken)
                 const parsedToken = await this.tokenService.decodeToken(refreshToken)
-                const userDB = await this.database.userProvider.getUser(parsedToken.userId)
+                const userDB = await this.database.user.getUser(parsedToken.userId)
                 let newTokens = await this.tokenService.generateTokens(userDB)
-                newTokens = await this.database.userProvider.saveTokensForUser(userDB.id, newTokens)
+                newTokens = await this.database.user.saveTokensForUser(userDB.id, newTokens)
 
                 this.logger.log(`${getClassName(this)}#updateTokens. Create tokens for user ${userDB.login} ${userDB.id}`)
                 // this.logger.log(`${getClassName(this)}#updateTokens. ${JSON.stringify(newTokens)}`)

@@ -22,7 +22,7 @@ export class ChemicalsController {
     @Get()
     async getChemicals(): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            const chemicals = await this.database.chemicalProvider.getChemicals()
+            const chemicals = await this.database.chemical.getChemicals()
             return HelperResponse.getSuccessResponse(chemicals)
         }
 
@@ -40,10 +40,10 @@ export class ChemicalsController {
                 const decodeToken = await this.tokenService.decodeToken(accessToken)
                 const userId = decodeToken.userId
 
-                const result = await this.database.chemicalProvider.deleteComplexesAsText([chemicalComplex.id])
+                const result = await this.database.chemical.deleteComplexesAsText([chemicalComplex.id])
                 this.logger.log(`${getClassName(this)}#addNewComplex. Clear complex ${JSON.stringify(result)}`)
 
-                const addedChemicalComplexes = await this.database.chemicalProvider.addComplexesAsText([chemicalComplex], userId)
+                const addedChemicalComplexes = await this.database.chemical.addComplexesAsText([chemicalComplex], userId)
                 const format = addedChemicalComplexes.map(complex => ({
                     name: complex.name,
                     id: complex.id
