@@ -9,6 +9,7 @@ import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
 import { ErrorCode, ErrorResponse } from "@models/errorResponse";
+import { TRole } from "@models/role";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -32,16 +33,23 @@ export class ChemicalsController {
 
     @Get('chemical-complex')
     @UseGuards(AuthGuard)
-    async getAllChemicalComplex(@Body() body: {onlyMy: boolean}, @Request() req: any): Promise<HttpResponse> {
+    async getAllChemicalComplex(@Body() body: {withoutAdmins: boolean}, @Request() req: any): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
                 const accessToken = req.headers.authorization
                 const decodeToken = await this.tokenService.decodeToken(accessToken)
                 const userId = decodeToken.userId
+                const roleId = decodeToken.role
+                const role = await this.database.user.getRole(roleId)
+                
+                if (role.name === "admin") {
+                    // getAllAdminsComplexes()
+                    // return complexes()
+                }
 
                 const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes(userId)
 
-                // if (!body.onlyMy) {
+                // if (!body.withoutAdmins) {
                 //     const adminRoles = await this.database.user.getAdminRoles()
                 //     this.database.chemical.getChemicalComplexes()
                 // }

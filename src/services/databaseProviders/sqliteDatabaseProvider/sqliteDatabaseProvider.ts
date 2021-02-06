@@ -3,8 +3,7 @@ import { Database, OPEN_READWRITE } from "sqlite3";
 import { TABLES } from "@services/databaseProviders/tables";
 import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
 import { UserDB } from "@dto/user/userDTO";
-import { TRole } from "@models/role";
-import { RoleDB } from "@dto/user/roleDTO";
+import { RoleDB, TRole } from "@models/role";
 import { Logger } from "@modules/logger/service/logger";
 import { TokensPair } from "@models/tokens";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
@@ -114,6 +113,24 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             })
         })
     }
+
+    getRole(roleId: string): Promise<RoleDB> {
+        return new Promise<RoleDB>((resolve, reject) => {
+            const sql = `SELECT * from ${TABLES.ROLE} WHERE id = ?`
+
+            this.database.get(sql,
+                [roleId],
+                (err, role: RoleDB) => {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(role)
+                })
+        })
+    }
+
+
 
     getUserByLogin = (login: string): Promise<UserDB | null> => {
         return new Promise<UserDB | null>((resolve, reject) => {
