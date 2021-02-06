@@ -1,11 +1,8 @@
 import * as bcrypt from 'bcrypt'
-import * as jwt from 'jsonwebtoken'
-import { SignOptions } from "jsonwebtoken";
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from "@nestjs/config";
 import { UserDB, UserDTO, UserCredentials } from "@dto/user/userDTO";
 import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
-import { TokensPair } from "@models/tokens";
 
 let advancedSalt;
 

@@ -79,7 +79,7 @@ export class TokenService {
     }
 
     verifyToken = (clearedToken: string): Promise<boolean> => {
-        return new Promise<boolean>((resolve, reject) => {
+        return new Promise<boolean>((resolve) => {
             jwt.verify(clearedToken, tokenSecret, (err) => {
                 if (err) {
                     return resolve(false)
