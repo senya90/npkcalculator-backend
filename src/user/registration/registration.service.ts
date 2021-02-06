@@ -1,17 +1,24 @@
 import * as bcrypt from 'bcrypt'
+import * as jwt from 'jsonwebtoken'
+import { SignOptions } from "jsonwebtoken";
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from "@nestjs/config";
 import { UserDB, UserDTO, UserCredentials } from "@dto/user/userDTO";
 import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
-import * as jwt from 'jsonwebtoken'
-import { JwtHeader, SignOptions } from "jsonwebtoken";
 import { TokensPair } from "@models/tokens";
 
-const advancedSalt = '$2b$10$ZFoe9PCdXWLcOnT46UOYEu'
-const tokenSecret = '89bf)(hg47&*83b'
+let advancedSalt;
+let tokenSecret;
 
 @Injectable()
 export class RegistrationService {
     private SALT_ROUNDS = 11
+
+    constructor(private readonly configService: ConfigService) {
+
+        advancedSalt = this.configService.get('ADVANCED_SALT')
+        tokenSecret = this.configService.get('TOKEN_SECRET')
+    }
 
     async prepareUserForDB(user :UserCredentials, roleID: string): Promise<UserDB> {
         const salt = await this._generateSalt()

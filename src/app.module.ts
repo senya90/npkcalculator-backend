@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import {ConfigModule} from "@nestjs/config"
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { DatabaseService } from "./services/database/database.service";
@@ -9,7 +10,7 @@ import { LoggerModule } from './modules/logger/logger.module';
 import { Logger } from "./modules/logger/service/logger";
 
 @Module({
-    imports: [LoggerModule],
+    imports: [LoggerModule, ConfigModule.forRoot()],
     controllers: [AppController, ChemicalsController, UserController],
     providers: [AppService, DatabaseService, RegistrationService]
 })
