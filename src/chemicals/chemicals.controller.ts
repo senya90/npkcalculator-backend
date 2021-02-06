@@ -41,10 +41,28 @@ export class ChemicalsController {
                 const userId = decodeToken.userId
                 const roleId = decodeToken.role
                 const role = await this.database.user.getRole(roleId)
-                
+
                 if (role.name === "admin") {
-                    // getAllAdminsComplexes()
-                    // return complexes()
+                    if (body.withoutAdmins) {
+                        const complexesForOnlyCurrentAdmin = await this.database.chemical.getChemicalComplexes(userId)
+                        return HelperResponse.getSuccessResponse(complexesForOnlyCurrentAdmin)
+                    }
+
+                    const allAdmins = await this.database.user.getAllAdminUsers()
+
+                    const complexesForAllAdminPromises = allAdmins.map(async admin => {
+                        return await this.database.chemical.getChemicalComplexes(admin.id)
+                    })
+
+                    const result = await Promise.all(complexesForAllAdminPromises)
+                    const complexes: ChemicalComplexDTO[] = []
+
+                    result.forEach(arrayOfComplexes => {
+                        complexes.push(...arrayOfComplexes)
+                    })
+
+                    console.log('complexes', complexes)
+
                 }
 
                 const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes(userId)

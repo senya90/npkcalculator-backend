@@ -130,6 +130,26 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    async getAllAdminUsers(): Promise<UserDB[]> {
+        const adminRole = await this.getRoleByName("admin")
+        return await this._selectUsersByRole(adminRole.id)
+    }
+
+    private _selectUsersByRole = (roleId: string): Promise<UserDB[]> => {
+        return new Promise<UserDB[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.USER} WHERE roleID = ?`
+
+            this.database.all(sql,
+                [roleId],
+                function(err, users) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(users)
+                })
+        })
+    }
 
 
     getUserByLogin = (login: string): Promise<UserDB | null> => {
@@ -215,7 +235,6 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 [userId],
                 function(err, chemicalComplexes) {
                     if (err) {
-                        console.log('3')
                         return reject(err)
                     }
 
