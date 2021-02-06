@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request } from "@nestjs/common";
+import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
@@ -6,6 +6,7 @@ import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalCompl
 import { RegistrationService } from "../user/registration/registration.service";
 import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
+import { AuthGuard } from "../guards/auth.guard";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -27,13 +28,11 @@ export class ChemicalsController {
     }
 
     @Post('chemical-complex')
+    @UseGuards(AuthGuard)
     async addNewComplex(@Body() chemicalComplexDTO: ChemicalComplexDTO, @Request() req: any): Promise<HttpResponse> {
-        // !!!TODO: CHECK AUTH before handle complex
-
-        const chemicalComplex = new ChemicalComplex(chemicalComplexDTO)
-
         if (this.database.isReady()) {
             try {
+                const chemicalComplex = new ChemicalComplex(chemicalComplexDTO)
 
                 let accessToken = req.headers.authorization
                 accessToken = this.registrationService.sanitizeToken(accessToken)

@@ -147,4 +147,13 @@ export class RegistrationService {
             })
         })
     }
+
+    isOK = async (token: string): Promise<boolean> => {
+        try {
+            await this.verifyToken(token)
+            return true
+        } catch (err) {
+            return false
+        }
+    }
 }
