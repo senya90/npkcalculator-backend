@@ -8,8 +8,6 @@ import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
-import { ErrorCode, ErrorResponse } from "@models/errorResponse";
-import { TRole } from "@models/role";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -43,24 +41,11 @@ export class ChemicalsController {
                 const role = await this.database.user.getRole(roleId)
 
                 if (role.name === "admin") {
-                    if (body.withoutAdmins) {
-                        const complexesForOnlyCurrentAdmin = await this.database.chemical.getChemicalComplexes([userId])
-                        return HelperResponse.getSuccessResponse(complexesForOnlyCurrentAdmin)
-                    }
-
-                    const allAdmins = await this.database.user.getAllAdminUsers()
-                    const allComplexes = await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
-                    return HelperResponse.getSuccessResponse(allComplexes)
+                    const complexes = this._getChemicalComplexesForAdmin(userId, body.withoutAdmins)
+                    return HelperResponse.getSuccessResponse(complexes)
                 }
 
-                const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes([userId])
-
-                if (!body.withoutAdmins) {
-                    const allAdmins = await this.database.user.getAllAdminUsers()
-                    const allAdminComplexes = await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
-                    complexes.push(...allAdminComplexes)
-                }
-
+                const complexes = this._getChemicalComplexesForUser(userId, body.withoutAdmins)
                 return HelperResponse.getSuccessResponse(complexes)
 
             } catch (err) {
@@ -70,6 +55,27 @@ export class ChemicalsController {
         }
 
         return HelperResponse.getDBError()
+    }
+
+    private _getChemicalComplexesForAdmin = async (userId: string, withoutOtherAdmins: boolean): Promise<ChemicalComplexDTO[]> => {
+        if (withoutOtherAdmins) {
+            return await this.database.chemical.getChemicalComplexes([userId])
+        }
+
+        const allAdmins = await this.database.user.getAllAdminUsers()
+        return await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
+    }
+
+    private _getChemicalComplexesForUser = async (userId: string, withoutAdmins: boolean): Promise<ChemicalComplexDTO[]> => {
+        const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes([userId])
+
+        if (!withoutAdmins) {
+            const allAdmins = await this.database.user.getAllAdminUsers()
+            const allAdminComplexes = await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
+            complexes.push(...allAdminComplexes)
+        }
+
+        return complexes
     }
 
     @Post('chemical-complex')
