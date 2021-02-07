@@ -41,11 +41,11 @@ export class ChemicalsController {
                 const role = await this.database.user.getRole(roleId)
 
                 if (role.name === "admin") {
-                    const complexes = this._getChemicalComplexesForAdmin(userId, body.withoutAdmins)
+                    const complexes = await this._getChemicalComplexesForAdmin(userId, body.withoutAdmins)
                     return HelperResponse.getSuccessResponse(complexes)
                 }
 
-                const complexes = this._getChemicalComplexesForUser(userId, body.withoutAdmins)
+                const complexes = await this._getChemicalComplexesForUser(userId, body.withoutAdmins)
                 return HelperResponse.getSuccessResponse(complexes)
 
             } catch (err) {
