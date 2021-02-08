@@ -18,6 +18,7 @@ export type ChemicalComplexDTO = {
     id: string
     name: string
     chemicalAggregates: ChemicalAggregate[]
+    userId: string
 }
 
 export class ChemicalComplex {

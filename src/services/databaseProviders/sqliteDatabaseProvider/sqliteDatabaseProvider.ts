@@ -223,7 +223,8 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 return {
                     id: complex.id,
                     name: complex.name,
-                    chemicalAggregates: JSON.parse(complex.chemicalAggregates)
+                    chemicalAggregates: JSON.parse(complex.chemicalAggregates),
+                    userId: complex.userID
                 }
             })
         })
