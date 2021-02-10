@@ -17,6 +17,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
 
     addComplexesAsText: (chemicalComplexes: ChemicalComplex[], userId: string) => Promise<ChemicalComplex[]>
     deleteComplexesAsText: (chemicalComplexesIds: string[]) => Promise<string[]>
+    deleteComplexesAsTextForUser: (chemicalComplexesIds: string[], userId: string) => Promise<string[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

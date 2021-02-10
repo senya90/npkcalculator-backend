@@ -284,7 +284,6 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-
     deleteComplexesAsText(chemicalComplexesIds: string[]): Promise<string[]> {
         const deleteComplexesPromises = chemicalComplexesIds.map(async complexId => {
             try {
@@ -303,6 +302,33 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [complexId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(complexId)
+                })
+        })
+    }
+
+    deleteComplexesAsTextForUser(chemicalComplexesIds: string[], userId: string): Promise<string[]> {
+        const deleteComplexesForUserPromises = chemicalComplexesIds.map(async complexId => {
+            try {
+                return await this._deleteComplexTextForUser(complexId, userId)
+            } catch (err) {
+                throw err
+            }
+        })
+
+        return Promise.all(deleteComplexesForUserPromises)
+    }
+
+    private _deleteComplexTextForUser = (complexId: string, userId: string): Promise<string> => {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX_TEXT} WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [complexId, userId],
                 (err) => {
                     if (err) {
                         return reject(err)

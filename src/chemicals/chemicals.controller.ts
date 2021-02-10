@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Post, Request, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
@@ -8,6 +8,7 @@ import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
+import { Param } from "@nestjs/common";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -103,6 +104,23 @@ export class ChemicalsController {
                 console.log('CATCH err', err)
                 return HelperResponse.getServerError()
             }
+
+        }
+
+        return HelperResponse.getDBError()
+    }
+
+    @Post('delete-chemical-complex')
+    @UseGuards(AuthGuard)
+    async deleteComplexes(@Body() chemicalComplexesIds: string[],  @Request() req: any): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+
+            const accessToken = req.headers.authorization
+            const decodeToken = await this.tokenService.decodeToken(accessToken)
+            const userId = decodeToken.userId
+
+            const deleted = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
+            return HelperResponse.getSuccessResponse(deleted)
 
         }
 
