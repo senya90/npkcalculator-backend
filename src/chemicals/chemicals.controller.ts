@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
@@ -8,7 +8,6 @@ import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
-import { Param } from "@nestjs/common";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -60,19 +59,19 @@ export class ChemicalsController {
 
     private _getChemicalComplexesForAdmin = async (userId: string, withoutOtherAdmins: boolean): Promise<ChemicalComplexDTO[]> => {
         if (withoutOtherAdmins) {
-            return await this.database.chemical.getChemicalComplexes([userId])
+            return await this.database.chemical.getUserChemicalComplexes([userId])
         }
 
         const allAdmins = await this.database.user.getAllAdminUsers()
-        return await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
+        return await this.database.chemical.getUserChemicalComplexes(allAdmins.map(admin => admin.id))
     }
 
     private _getChemicalComplexesForUser = async (userId: string, withoutAdmins: boolean): Promise<ChemicalComplexDTO[]> => {
-        const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getChemicalComplexes([userId])
+        const complexes: ChemicalComplexDTO[] =  await this.database.chemical.getUserChemicalComplexes([userId])
 
         if (!withoutAdmins) {
             const allAdmins = await this.database.user.getAllAdminUsers()
-            const allAdminComplexes = await this.database.chemical.getChemicalComplexes(allAdmins.map(admin => admin.id))
+            const allAdminComplexes = await this.database.chemical.getUserChemicalComplexes(allAdmins.map(admin => admin.id))
             complexes.push(...allAdminComplexes)
         }
 
@@ -112,15 +111,21 @@ export class ChemicalsController {
 
     @Post('delete-chemical-complex')
     @UseGuards(AuthGuard)
-    async deleteComplexes(@Body() chemicalComplexesIds: string[],  @Request() req: any): Promise<HttpResponse> {
+    async deleteComplexes(@Body('id') chemicalComplexesIds: string[],  @Request() req: any): Promise<HttpResponse> {
         if (this.database.isReady()) {
-
             const accessToken = req.headers.authorization
             const decodeToken = await this.tokenService.decodeToken(accessToken)
             const userId = decodeToken.userId
+            const roleId = decodeToken.role
+            const role = await this.database.user.getRole(roleId)
 
-            const deleted = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
-            return HelperResponse.getSuccessResponse(deleted)
+            if (role.name === "admin") {
+                const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds)
+                return HelperResponse.getSuccessResponse(deletedComplexesIds)
+            }
+
+            const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
+            return HelperResponse.getSuccessResponse(deletedComplexesIds)
 
         }
 

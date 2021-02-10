@@ -212,7 +212,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    async getChemicalComplexes(usersIds: string[]): Promise<ChemicalComplexDTO[]> {
+    async getUserChemicalComplexes(usersIds: string[]): Promise<ChemicalComplexDTO[]> {
         const selectComplexesPromises = usersIds.map(async userId => {
             const complexes = await this._selectComplexesByUser(userId)
             if (!complexes) {
@@ -329,6 +329,58 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [complexId, userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(complexId)
+                })
+        })
+    }
+
+    deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds: string[]): Promise<string[]> {
+        const deletedComplexesPromises = chemicalComplexesIds.filter(async (complexId): Promise<string> => {
+                const adminRole = await this.getRoleByName('admin')
+                const complexDB = await this._selectComplex(complexId)
+                const complexOwner = await this.getUser(complexDB.userID)
+
+                if (complexOwner.roleID === adminRole.id) {
+                    const isDeleted = await this._deleteComplex(complexId)
+                    if (isDeleted) {
+                        return complexId
+                    }
+
+                    return undefined
+                }
+                return undefined
+            })
+
+
+        return Promise.all(deletedComplexesPromises)
+    }
+
+    private _selectComplex(complexId: string): Promise<ChemicalComplexTextDB> {
+        return new Promise<any>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.CHEMICAL_COMPLEX_TEXT} WHERE id = ?`
+
+            this.database.get(sql,
+                [complexId],
+                function(err, chemicalComplexes) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(chemicalComplexes)
+                })
+        })
+    }
+
+    private _deleteComplexTextForAdmin(complexId: string, adminRoleId: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX_TEXT} WHERE id = ?`
+
+            this.database.run(sql,
+                [complexId],
                 (err) => {
                     if (err) {
                         return reject(err)
