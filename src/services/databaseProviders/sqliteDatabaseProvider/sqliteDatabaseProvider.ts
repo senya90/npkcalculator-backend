@@ -274,7 +274,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [chemicalComplex.id, chemicalComplex.name, chemicalComplex.chemicalAggregates, chemicalComplex.userID],
-                function(err, result) {
+                function(err) {
                     if (err) {
                         return reject(err)
                     }
@@ -375,21 +375,6 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    private _deleteComplexTextForAdmin(complexId: string, adminRoleId: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            const sql = `DELETE FROM ${TABLES.CHEMICAL_COMPLEX_TEXT} WHERE id = ?`
-
-            this.database.run(sql,
-                [complexId],
-                (err) => {
-                    if (err) {
-                        return reject(err)
-                    }
-                    return resolve(complexId)
-                })
-        })
-    }
-
     addComplexes = async (chemicalComplexes: ChemicalComplex[], userId: string): Promise<any> => {
         await this.deleteComplexes(chemicalComplexes.map(complex => complex.id))
         this.logger.debug(`${getClassName(this)}#addComplexes. Clear complexes`)
@@ -412,7 +397,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [chemicalComplex.id, chemicalComplex.name, chemicalComplex.userID],
-                function(err, result) {
+                function(err) {
                     if (err) {
                         return reject(err)
                     }
@@ -436,7 +421,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [IdGenerator.generate(), complex.id, aggregate.id],
-                function(err, result) {
+                function(err) {
                     if (err) {
                         return reject(err)
                     }
@@ -530,7 +515,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [IdGenerator.generate(), aggregate.id, atom.id],
-                function(err, result) {
+                function(err) {
                     if (err) {
                         return reject(err)
                     }
@@ -546,7 +531,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [chemicalAggregate.id, chemicalAggregate.multiplier, chemicalAggregate.userID],
-                function(err, result) {
+                function(err) {
                     if (err) {
                         return reject(err)
                     }
@@ -654,7 +639,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.run(sql,
                 [chemicalAtom.id, chemicalAtom.chemicalUnitID, chemicalAtom.atomsCount, chemicalAtom.userID],
-                function(err, result) {
+                function(err) {
                     if (err) {
                         return reject(err)
                     }
