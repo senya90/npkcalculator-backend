@@ -284,6 +284,38 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    updateComplexes(chemicalComplexes: ChemicalComplex[], userId: string): Promise<ChemicalComplexDTO[]> {
+        const updateChemicalsPromises = chemicalComplexes.map(async complex => {
+            const chemicalComplexTextDB = complex.toChemicalComplexTextDB(userId)
+            const updatedComplex = await this._updateComplex(chemicalComplexTextDB)
+            const complexDTO: ChemicalComplexDTO = {
+                id: updatedComplex.id,
+                name: updatedComplex.name,
+                chemicalAggregates: JSON.parse(updatedComplex.chemicalAggregates),
+                userId: userId
+            }
+            return Promise.resolve(complexDTO)
+        })
+
+        return Promise.all(updateChemicalsPromises)
+    }
+
+    private _updateComplex(chemicalComplex: ChemicalComplexTextDB): Promise<ChemicalComplexTextDB> {
+        return new Promise<ChemicalComplexTextDB>((resolve, reject) => {
+            const sql = `UPDATE ${TABLES.CHEMICAL_COMPLEX_TEXT} SET id = ? name = ? chemicalAggregates = ? userID = ?  WHERE id = ?`
+
+            this.database.run(sql,
+                [chemicalComplex.id, chemicalComplex.name, chemicalComplex.chemicalAggregates, chemicalComplex.userID, chemicalComplex.id],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(chemicalComplex)
+                })
+        })
+    }
+
+
     deleteComplexesAsText(chemicalComplexesIds: string[]): Promise<string[]> {
         const deleteComplexesPromises = chemicalComplexesIds.map(async complexId => {
             try {
