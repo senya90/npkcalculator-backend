@@ -302,7 +302,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     private _updateComplex(chemicalComplex: ChemicalComplexTextDB): Promise<ChemicalComplexTextDB> {
         return new Promise<ChemicalComplexTextDB>((resolve, reject) => {
-            const sql = `UPDATE ${TABLES.CHEMICAL_COMPLEX_TEXT} SET id = ? name = ? chemicalAggregates = ? userID = ?  WHERE id = ?`
+            const sql = `UPDATE ${TABLES.CHEMICAL_COMPLEX_TEXT} SET id = ?, name = ?, chemicalAggregates = ?, userID = ?  WHERE id = ?`
 
             this.database.run(sql,
                 [chemicalComplex.id, chemicalComplex.name, chemicalComplex.chemicalAggregates, chemicalComplex.userID, chemicalComplex.id],

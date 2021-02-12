@@ -135,19 +135,17 @@ export class ChemicalsController {
     @Post('update-chemical-complex')
     @UseGuards(AuthGuard)
     async updateComplexes(
-        @Body('chemicalComplexes') chemicalComplexes: ChemicalComplex[],
+        @Body() chemicalComplexDTO: ChemicalComplexDTO,
         @Request() req: any
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
+            const chemicalComplexes = new ChemicalComplex(chemicalComplexDTO)
             const accessToken = req.headers.authorization
             const decodeToken = await this.tokenService.decodeToken(accessToken)
             const userId = decodeToken.userId
 
-            // TODO: test it
-            await this.database.chemical.updateComplexes(chemicalComplexes, userId)
-
-            return HelperResponse.getSuccessResponse({})
-
+            const updatedComplexes = await this.database.chemical.updateComplexes([chemicalComplexes], userId)
+            return HelperResponse.getSuccessResponse(updatedComplexes)
         }
 
         return HelperResponse.getDBError()
