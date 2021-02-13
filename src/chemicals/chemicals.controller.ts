@@ -100,7 +100,7 @@ export class ChemicalsController {
                 this.logger.log(`${getClassName(this)}#addNewComplex. ${JSON.stringify(format)}. User: ${userId}`)
                 return HelperResponse.getSuccessResponse(addedChemicalComplexes)
             } catch (err) {
-                console.log('CATCH err', err)
+                this.logger.error(`${getClassName(this)}#addNewComplex. err: ${err.message} ${JSON.stringify(err)}`)
                 return HelperResponse.getServerError()
             }
 
@@ -113,20 +113,26 @@ export class ChemicalsController {
     @UseGuards(AuthGuard)
     async deleteComplexes(@Body('id') chemicalComplexesIds: string[],  @Request() req: any): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            const accessToken = req.headers.authorization
-            const decodeToken = await this.tokenService.decodeToken(accessToken)
-            const userId = decodeToken.userId
-            const roleId = decodeToken.role
-            const role = await this.database.user.getRole(roleId)
+            try {
+                const accessToken = req.headers.authorization
+                const decodeToken = await this.tokenService.decodeToken(accessToken)
+                const userId = decodeToken.userId
+                const roleId = decodeToken.role
+                const role = await this.database.user.getRole(roleId)
 
-            if (role.name === "admin") {
-                const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds)
+                if (role.name === "admin") {
+                    const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds)
+                    this.logger.log(`${getClassName(this)}#deleteComplexes. Delete for ADMIN role: ${deletedComplexesIds}`)
+                    return HelperResponse.getSuccessResponse(deletedComplexesIds)
+                }
+
+                const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
+                this.logger.log(`${getClassName(this)}#deleteComplexes. Delete for USER role: ${deletedComplexesIds}`)
                 return HelperResponse.getSuccessResponse(deletedComplexesIds)
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#deleteComplexes. err: ${err.message} ${JSON.stringify(err)}`)
+                return HelperResponse.getServerError()
             }
-
-            const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
-            return HelperResponse.getSuccessResponse(deletedComplexesIds)
-
         }
 
         return HelperResponse.getDBError()
@@ -139,13 +145,20 @@ export class ChemicalsController {
         @Request() req: any
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            const chemicalComplexes = new ChemicalComplex(chemicalComplexDTO)
-            const accessToken = req.headers.authorization
-            const decodeToken = await this.tokenService.decodeToken(accessToken)
-            const userId = decodeToken.userId
+            try {
+                const chemicalComplexes = new ChemicalComplex(chemicalComplexDTO)
+                const accessToken = req.headers.authorization
+                const decodeToken = await this.tokenService.decodeToken(accessToken)
+                const userId = decodeToken.userId
 
-            const updatedComplexes = await this.database.chemical.updateComplexes([chemicalComplexes], userId)
-            return HelperResponse.getSuccessResponse(updatedComplexes)
+                const updatedComplexes = await this.database.chemical.updateComplexes([chemicalComplexes], userId)
+                this.logger.log(`${getClassName(this)}#updateComplexes. Updated: ${JSON.stringify(updatedComplexes)}`)
+                return HelperResponse.getSuccessResponse(updatedComplexes)
+
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#updateComplexes. err: ${err.message} ${JSON.stringify(err)}`)
+                return HelperResponse.getServerError()
+            }
         }
 
         return HelperResponse.getDBError()
