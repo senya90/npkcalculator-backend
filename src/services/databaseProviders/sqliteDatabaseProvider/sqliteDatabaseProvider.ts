@@ -391,20 +391,21 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds: string[]): Promise<string[]> {
         const deletedComplexesPromises = chemicalComplexesIds.filter(async (complexId): Promise<string> => {
-                const adminRole = await this.getRoleByName('admin')
-                const complexDB = await this._selectComplex(complexId)
-                const complexOwner = await this.getUser(complexDB.userID)
+            const adminRole = await this.getRoleByName('admin')
+            const complexDB = await this._selectComplex(complexId)
+            const complexOwner = await this.getUser(complexDB.userID)
 
-                if (complexOwner.roleID === adminRole.id) {
-                    const isDeleted = await this._deleteComplex(complexId)
-                    if (isDeleted) {
-                        return complexId
-                    }
-
-                    return undefined
+            if (complexOwner.roleID === adminRole.id) {
+                const isDeleted = await this._deleteComplexText(complexId)
+                if (isDeleted) {
+                    return complexId
                 }
+
                 return undefined
-            })
+            }
+
+            return undefined
+        })
 
 
         return Promise.all(deletedComplexesPromises)
