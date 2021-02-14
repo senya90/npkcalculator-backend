@@ -197,6 +197,25 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    deleteTokens(accessToken: string, userId: string): Promise<boolean> {
+        return this._deleteTokenByAccess(accessToken, userId)
+    }
+
+    private _deleteTokenByAccess = (accessToken: string, userId: string): Promise<boolean> => {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.TOKEN} WHERE accessToken = ? AND userID = ?`
+
+            this.database.run(sql,
+                [accessToken, userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(true)
+                })
+        })
+    }
+
     clearTokenForUser = (userID: string): Promise<boolean> => {
         return new Promise<boolean>((resolve, reject) => {
             const sql = `DELETE FROM ${TABLES.TOKEN} WHERE userID = ?`

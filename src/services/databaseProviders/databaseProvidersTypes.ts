@@ -24,10 +24,14 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
     getUser: (userId: string) => Promise<UserDB>
-    getAllAdminUsers: () => Promise<UserDB[]>
     getUserByLogin: (login: string) => Promise<UserDB | null>
+    getAllAdminUsers: () => Promise<UserDB[]>
+
     registerUser: (user: UserDB) => Promise<any>
+
     getRoleByName: (roleName: TRole) => Promise<RoleDB>
     getRole: (roleId: string) => Promise<RoleDB>
+
     saveTokensForUser: (userId: string, tokens: TokensPair) => Promise<TokensPair>
+    deleteTokens: (accessToken: string, userId: string) => Promise<boolean>
 }

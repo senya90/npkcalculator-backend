@@ -3,12 +3,15 @@ import { HelperResponse } from "@helpers/helperResponse";
 import { getClassName } from "@helpers/utils";
 import { HttpResponse } from "@models/httpResponse";
 import { ROLES } from "@models/role";
-import { Body, Post, Request, Controller } from "@nestjs/common";
+import { Body, Post, Request, Controller, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { Logger } from "src/modules/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
 import { ErrorCode } from "@models/errorResponse";
 import { TokenService } from "./token/token.service";
+import { AuthGuard } from "../guards/auth.guard";
+import { GetUser } from "../customDecorator/getUser";
+import { GetToken } from "src/customDecorator/getToken";
 
 @Controller('user')
 export class UserController {
@@ -69,7 +72,27 @@ export class UserController {
                 this.logger.warn(`${getClassName(this)}#loginUser. User ${user.login} ${user.password}. Incorrect login or password`)
                 return HelperResponse.getAuthError(ErrorCode().incorrectLoginPassword)
             } catch (err) {
-                this.logger.log(`${getClassName(this)}#loginUser. Server error, ${err}`)
+                this.logger.error(`${getClassName(this)}#loginUser. err: ${err.message} ${JSON.stringify(err)}`)
+                return HelperResponse.getServerError(ErrorCode().internalServerError)
+            }
+        }
+
+        return HelperResponse.getDBError()
+    }
+
+    @Post('logout')
+    @UseGuards(AuthGuard)
+    async logoutUser(
+        @GetToken() accessToken: string,
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                const isDeleted = await this.database.user.deleteTokens(accessToken, userId)
+                this.logger.log(`${getClassName(this)}#logoutUser. Token pair was deleted for user: ${userId}`)
+                return HelperResponse.getSuccessResponse(isDeleted)
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#logoutUser. err: ${err.message} ${JSON.stringify(err)}`)
                 return HelperResponse.getServerError(ErrorCode().internalServerError)
             }
         }
