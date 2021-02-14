@@ -8,6 +8,8 @@ import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
+import { GetUser } from "../customDecorator/getUser";
+import { GetRole } from "../customDecorator/getRole";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -31,13 +33,13 @@ export class ChemicalsController {
 
     @Get('chemical-complex')
     @UseGuards(AuthGuard)
-    async getAllChemicalComplex(@Body() body: {withoutAdmins: boolean}, @Request() req: any): Promise<HttpResponse> {
+    async getAllChemicalComplex(
+        @Body() body: {withoutAdmins: boolean},
+        @GetUser() userId: string,
+        @GetRole() roleId: string
+    ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                const accessToken = req.headers.authorization
-                const decodeToken = await this.tokenService.decodeToken(accessToken)
-                const userId = decodeToken.userId
-                const roleId = decodeToken.role
                 const role = await this.database.user.getRole(roleId)
 
                 if (role.name === "admin") {
@@ -80,14 +82,13 @@ export class ChemicalsController {
 
     @Post('chemical-complex')
     @UseGuards(AuthGuard)
-    async addNewComplex(@Body() chemicalComplexDTO: ChemicalComplexDTO, @Request() req: any): Promise<HttpResponse> {
+    async addNewComplex(
+        @Body() chemicalComplexDTO: ChemicalComplexDTO,
+        @GetUser() userId: string,
+    ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
                 const chemicalComplex = new ChemicalComplex(chemicalComplexDTO)
-
-                const accessToken = req.headers.authorization
-                const decodeToken = await this.tokenService.decodeToken(accessToken)
-                const userId = decodeToken.userId
 
                 const result = await this.database.chemical.deleteComplexesAsText([chemicalComplex.id])
                 this.logger.log(`${getClassName(this)}#addNewComplex. Clear complex ${JSON.stringify(result)}`)
@@ -111,13 +112,13 @@ export class ChemicalsController {
 
     @Post('delete-chemical-complex')
     @UseGuards(AuthGuard)
-    async deleteComplexes(@Body('id') chemicalComplexesIds: string[],  @Request() req: any): Promise<HttpResponse> {
+    async deleteComplexes(
+        @Body('id') chemicalComplexesIds: string[],
+        @GetUser() userId: string,
+        @GetRole() roleId: string
+    ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                const accessToken = req.headers.authorization
-                const decodeToken = await this.tokenService.decodeToken(accessToken)
-                const userId = decodeToken.userId
-                const roleId = decodeToken.role
                 const role = await this.database.user.getRole(roleId)
 
                 if (role.name === "admin") {
