@@ -63,7 +63,8 @@ export class UserController {
 
                 if (isPasswordMatches) {
                     this.logger.log(`${getClassName(this)}#loginUser. User ${userDB.login} ${userDB.id} is logged in`)
-                    const tokens = await this.tokenService.generateTokens(userDB)
+                    const role = await this.database.user.getRole(userDB.roleID)
+                    const tokens = await this.tokenService.generateTokens(userDB, role)
                     const savedTokens = await this.database.user.saveTokensForUser(userDB.id, tokens)
                     this.logger.log(`${getClassName(this)}#loginUser. savedTokens: ${JSON.stringify(savedTokens)}`)
                     return HelperResponse.getSuccessResponse(savedTokens)
@@ -112,7 +113,8 @@ export class UserController {
 
                 const parsedToken = await this.tokenService.decodeToken(refreshToken)
                 const userDB = await this.database.user.getUser(parsedToken.userId)
-                let newTokens = await this.tokenService.generateTokens(userDB)
+                const role = await this.database.user.getRole(userDB.roleID)
+                let newTokens = await this.tokenService.generateTokens(userDB, role)
                 newTokens = await this.database.user.saveTokensForUser(userDB.id, newTokens)
 
                 this.logger.log(`${getClassName(this)}#updateTokens. Create tokens for user ${userDB.login} ${userDB.id}`)

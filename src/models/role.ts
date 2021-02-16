@@ -1,11 +1,11 @@
-export const ROLES: {[key: string]: TRole} = {
+export const ROLES: {[key: string]: RoleName} = {
     ADMIN: "admin",
     USER: "user"
 }
 
-export type TRole = 'admin' | 'user'
+export type RoleName = 'admin' | 'user'
 
 export type RoleDB = {
     id: string
-    name: TRole
+    name: RoleName
 }

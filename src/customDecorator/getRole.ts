@@ -15,6 +15,6 @@ export const GetRole = createParamDecorator(
         const tokenService = new TokenService(configService)
 
         const decodeToken = await tokenService.decodeToken(accessToken)
-        return decodeToken.role
+        return decodeToken.roleId
     },
 );

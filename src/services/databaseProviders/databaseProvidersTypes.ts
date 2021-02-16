@@ -1,6 +1,6 @@
 import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
 import { UserDB } from "@dto/user/userDTO";
-import { RoleDB, TRole } from "@models/role";
+import { RoleDB, RoleName } from "@models/role";
 import { TokensPair } from "@models/tokens";
 import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
 
@@ -29,7 +29,7 @@ export interface IUserDatabaseProvider extends IDatabaseProvider {
 
     registerUser: (user: UserDB) => Promise<any>
 
-    getRoleByName: (roleName: TRole) => Promise<RoleDB>
+    getRoleByName: (roleName: RoleName) => Promise<RoleDB>
     getRole: (roleId: string) => Promise<RoleDB>
 
     saveTokensForUser: (userId: string, tokens: TokensPair) => Promise<TokensPair>

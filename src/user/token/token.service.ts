@@ -4,6 +4,7 @@ import { TokensPair } from "@models/tokens";
 import { SignOptions } from "jsonwebtoken";
 import * as jwt from "jsonwebtoken";
 import { ConfigService } from "@nestjs/config";
+import { RoleDB } from "@models/role";
 
 let tokenSecret;
 
@@ -14,11 +15,12 @@ export class TokenService {
         tokenSecret = this.configService.get('TOKEN_SECRET')
     }
 
-    async generateTokens(user: UserDB): Promise<TokensPair> {
+    async generateTokens(user: UserDB, role: RoleDB): Promise<TokensPair> {
         const accessPayload = {
             userId: user.id,
             login: user.login,
-            role: user.roleID,
+            role: role.name,
+            roleId: role.id,
             tokenType: 'access'
         }
 
