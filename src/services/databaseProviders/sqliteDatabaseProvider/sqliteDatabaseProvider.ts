@@ -17,6 +17,7 @@ import {
 } from "@dto/chemical/chemicalComplex";
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 import { getClassName } from "@helpers/utils";
+import { FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -701,4 +702,31 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
+        const fertilizersDB = await this._selectFertilizerByUser(userId)
+        return fertilizersDB.map(fertilizerDB => ({
+            id: fertilizerDB.id,
+            name: fertilizerDB.name,
+            userId: fertilizerDB.userId,
+            ingredients: JSON.parse(fertilizerDB.ingredients),
+            order: fertilizerDB.order,
+            timestamp: fertilizerDB.timestamp
+        }))
+    }
+
+    private _selectFertilizerByUser = (userId: string): Promise<FertilizerDB[]> => {
+        return new Promise<FertilizerDB[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.FERTILIZER} WHERE userID = ?`
+
+            this.database.all(sql,
+                [userId],
+                (error, fertilizers: any[]) => {
+                if (error) {
+                    return reject(error)
+                }
+
+                resolve(fertilizers)
+            })
+        })
+    }
 }

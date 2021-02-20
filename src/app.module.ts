@@ -9,10 +9,11 @@ import { RegistrationService } from './controllers/user/registration/registratio
 import { LoggerModule } from './modules/logger/logger.module';
 import { Logger } from "./modules/logger/service/logger";
 import { TokenService } from './controllers/user/token/token.service';
+import { FertilizerController } from './controllers/fertilizer/fertilizer.controller';
 
 @Module({
     imports: [LoggerModule, ConfigModule.forRoot()],
-    controllers: [AppController, ChemicalsController, UserController],
+    controllers: [AppController, ChemicalsController, UserController, FertilizerController],
     providers: [AppService, DatabaseService, RegistrationService, TokenService]
 })
 export class AppModule {
