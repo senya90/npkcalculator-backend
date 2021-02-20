@@ -3,12 +3,12 @@ import {ConfigModule} from "@nestjs/config"
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { DatabaseService } from "./services/database/database.service";
-import { ChemicalsController } from "./chemicals/chemicals.controller";
-import { UserController } from "./user/user.controller";
-import { RegistrationService } from './user/registration/registration.service';
+import { ChemicalsController } from "./controllers/chemicals/chemicals.controller";
+import { UserController } from "./controllers/user/user.controller";
+import { RegistrationService } from './controllers/user/registration/registration.service';
 import { LoggerModule } from './modules/logger/logger.module';
 import { Logger } from "./modules/logger/service/logger";
-import { TokenService } from './user/token/token.service';
+import { TokenService } from './controllers/user/token/token.service';
 
 @Module({
     imports: [LoggerModule, ConfigModule.forRoot()],

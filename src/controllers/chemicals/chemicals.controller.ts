@@ -6,10 +6,10 @@ import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalCompl
 import { RegistrationService } from "../user/registration/registration.service";
 import { getClassName } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
-import { AuthGuard } from "../guards/auth.guard";
+import { AuthGuard } from "../../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
-import { GetUser } from "../customDecorator/getUser";
-import { GetRole } from "../customDecorator/getRole";
+import { GetUser } from "../../customDecorator/getUser";
+import { GetRole } from "../../customDecorator/getRole";
 
 @Controller('chemicals')
 export class ChemicalsController {

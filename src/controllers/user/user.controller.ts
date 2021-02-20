@@ -5,12 +5,12 @@ import { HttpResponse } from "@models/httpResponse";
 import { ROLES } from "@models/role";
 import { Body, Post, Request, Controller, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
-import { Logger } from "src/modules/logger/service/logger";
+import { Logger } from "@modules/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
 import { ErrorCode } from "@models/errorResponse";
 import { TokenService } from "./token/token.service";
-import { AuthGuard } from "../guards/auth.guard";
-import { GetUser } from "../customDecorator/getUser";
+import { AuthGuard } from "../../guards/auth.guard";
+import { GetUser } from "../../customDecorator/getUser";
 import { GetToken } from "src/customDecorator/getToken";
 
 @Controller('user')

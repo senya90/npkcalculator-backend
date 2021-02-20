@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { TokenService } from "../user/token/token.service";
+import { TokenService } from "../controllers/user/token/token.service";
 import { ConfigService } from "@nestjs/config";
 
 export const GetUser = createParamDecorator(

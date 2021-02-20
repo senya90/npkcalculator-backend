@@ -2,7 +2,7 @@ import { Logger } from "@modules/logger/service/logger";
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { getClassName } from "@helpers/utils";
-import { TokenService } from "../user/token/token.service";
+import { TokenService } from "../controllers/user/token/token.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
