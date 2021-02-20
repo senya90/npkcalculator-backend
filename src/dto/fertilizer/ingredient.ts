@@ -1,5 +1,7 @@
+import { ChemicalComplex } from "@dto/chemical/chemicalComplex";
+
 export type Ingredient = {
     id: string
     valuePercent: number
-    chemicalComplexId: string
+    chemicalComplex: ChemicalComplex
 }

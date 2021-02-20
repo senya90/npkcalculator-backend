@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from "@nestjs/config";
 import { UserDB, UserDTO, UserCredentials } from "@dto/user/userDTO";
 import { IdGenerator } from '@helpers/idGenerator/IdGenerator';
+import { getNowTimeSeconds } from '@helpers/utils';
 
 let advancedSalt;
 
@@ -24,17 +25,11 @@ export class RegistrationService {
             id: IdGenerator.generate(),
             login: user.login,
             password: hashedPassword,
-            created: this._getNowTimeSeconds(),
+            created: getNowTimeSeconds(),
             nick: null,
             roleID: roleID,
             salt: salt
         }
-    }
-
-    private _getNowTimeSeconds = () => {
-        const MILLISECONDS_TO_SECONDS = 1000
-        const seconds = new Date().valueOf() / MILLISECONDS_TO_SECONDS
-        return Math.trunc(seconds)
     }
 
     private _generateSalt = (): Promise<string> => {

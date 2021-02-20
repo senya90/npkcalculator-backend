@@ -3,7 +3,7 @@ import { UserDB } from "@dto/user/userDTO";
 import { RoleDB, RoleName } from "@models/role";
 import { TokensPair } from "@models/tokens";
 import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
-import { FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
+import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 
 export interface IDatabaseProvider {
     connect: (databaseName: string, databaseUrl: string) => Promise<any>
@@ -23,6 +23,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     deleteComplexesAsTextOnlyAdmin: (chemicalComplexesIds: string[]) => Promise<string[]>
 
     getFertilizers: (userId: string) => Promise<FertilizerDTO[]>
+    addFertilizer: (fertilizers: Fertilizer[], userId: string) => Promise<Fertilizer[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

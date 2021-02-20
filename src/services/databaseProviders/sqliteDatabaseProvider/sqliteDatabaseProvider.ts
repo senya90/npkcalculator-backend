@@ -17,7 +17,7 @@ import {
 } from "@dto/chemical/chemicalComplex";
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 import { getClassName } from "@helpers/utils";
-import { FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
+import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -704,14 +704,16 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
         const fertilizersDB = await this._selectFertilizerByUser(userId)
-        return fertilizersDB.map(fertilizerDB => ({
-            id: fertilizerDB.id,
-            name: fertilizerDB.name,
-            userId: fertilizerDB.userId,
-            ingredients: JSON.parse(fertilizerDB.ingredients),
-            order: fertilizerDB.order,
-            timestamp: fertilizerDB.timestamp
-        }))
+        return fertilizersDB.map(fertilizerDB => {
+            return {
+                id: fertilizerDB.id,
+                name: fertilizerDB.name,
+                userId: fertilizerDB.userId,
+                ingredients: JSON.parse(fertilizerDB.ingredients),
+                orderNumber: fertilizerDB.orderNumber,
+                timestamp: fertilizerDB.timestamp
+            }
+        })
     }
 
     private _selectFertilizerByUser = (userId: string): Promise<FertilizerDB[]> => {
@@ -727,6 +729,38 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
                 resolve(fertilizers)
             })
+        })
+    }
+
+    async addFertilizer(fertilizers: Fertilizer[], userId: string): Promise<Fertilizer[]> {
+        try {
+            const addFertilizersPromises = fertilizers.map(async fertilizer => {
+                const fertilizerDB = fertilizer.toDB(userId)
+                await this._insertFertilizer(fertilizerDB)
+                return fertilizer
+            })
+
+            return Promise.all(addFertilizersPromises)
+        } catch (err) {
+            throw err
+        }
+    }
+
+    private _insertFertilizer = (fertilizer: FertilizerDB): Promise<FertilizerDB> => {
+        return new Promise<FertilizerDB>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.FERTILIZER}(id, name, userID, ingredients, orderNumber, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
+
+            this.database.run(sql,
+                [fertilizer.id, fertilizer.name, fertilizer.userId, fertilizer.ingredients, fertilizer.orderNumber, fertilizer.timestamp],
+                function(err) {
+                    if (err) {
+                        console.log('err')
+                        console.log(err)
+                        return reject(err)
+                    }
+
+                    return resolve(fertilizer)
+                })
         })
     }
 }
