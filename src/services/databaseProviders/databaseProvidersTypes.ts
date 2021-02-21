@@ -24,6 +24,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
 
     getFertilizers: (userId: string) => Promise<FertilizerDTO[]>
     addFertilizer: (fertilizers: Fertilizer[], userId: string) => Promise<Fertilizer[]>
+    deleteFertilizers: (fertilizersIds: string[], userId: string) => Promise<string[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

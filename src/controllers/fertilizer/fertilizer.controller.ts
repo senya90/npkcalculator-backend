@@ -46,4 +46,20 @@ export class FertilizerController {
 
         return HelperResponse.getDBError()
     }
+
+    @Post('delete-fertilizer')
+    @UseGuards(AuthGuard)
+    async deleteFertilizer(
+        @Body('id') fertilizersIds: string[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            this.logger.log(`${getClassName(this)}#deleteFertilizer. User id: ${userId} fertilizers: ${JSON.stringify(fertilizersIds)}`)
+            const deletedFertilizersIds = await this.database.chemical.deleteFertilizers(fertilizersIds, userId)
+            this.logger.log(`${getClassName(this)}#deleteFertilizer. Successfully deleted: ${JSON.stringify(deletedFertilizersIds)}`)
+            return HelperResponse.getSuccessResponse(deletedFertilizersIds)
+        }
+
+        return HelperResponse.getDBError()
+    }
 }

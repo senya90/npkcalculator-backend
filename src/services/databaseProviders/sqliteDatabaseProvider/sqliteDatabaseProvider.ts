@@ -763,4 +763,34 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 })
         })
     }
+
+    deleteFertilizers(fertilizersIds: string[], userId: string): Promise<string[]> {
+        try {
+            const deleteFertilizersPromises = fertilizersIds.map(async fertilizerId => {
+                await this._deleteFertilizer(fertilizerId, userId)
+                return fertilizerId
+            })
+
+            return Promise.all(deleteFertilizersPromises)
+        } catch (err) {
+            throw err
+        }
+    }
+
+    private _deleteFertilizer = (fertilizerId: string, userId: string): Promise<string> => {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.FERTILIZER} WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [fertilizerId, userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(fertilizerId)
+                })
+        })
+    }
+
+
 }
