@@ -23,7 +23,7 @@ export class FertilizerController {
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             const fertilizersDTO = await this.database.chemical.getFertilizers(userId)
-            this.logger.log(`${getClassName(this)}#getFertilizers. User id: ${userId}. Length ${fertilizersDTO.length}`)
+            this.logger.debug(`${getClassName(this)}#getFertilizers. User id: ${userId}. Length ${fertilizersDTO.length}`)
             return HelperResponse.getSuccessResponse(fertilizersDTO)
         }
 
