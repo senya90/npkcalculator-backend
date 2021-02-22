@@ -62,4 +62,23 @@ export class FertilizerController {
 
         return HelperResponse.getDBError()
     }
+
+    @Post('update-fertilizer')
+    @UseGuards(AuthGuard)
+    async updateFertilizer(
+        @Body('fertilizer') fertilizers: FertilizerDTO[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                this.logger.log(`${getClassName(this)}#updateFertilizer. User id: ${userId} fertilizers: ${Fertilizer.getIds(fertilizers)}`)
+                const updatedFertilizers = await this.database.chemical.updateFertilizers(fertilizers, userId)
+                this.logger.log(`${getClassName(this)}#updateFertilizer. Successfully updated: ${Fertilizer.getIds(updatedFertilizers)}`)
+                return HelperResponse.getSuccessResponse(updatedFertilizers)
+            } catch (err) {
+                HelperResponse.getServerError()
+            }
+        }
+        return HelperResponse.getDBError()
+    }
 }

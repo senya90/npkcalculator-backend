@@ -14,7 +14,7 @@ export type FertilizerDB = {
     name: string
     userId: string
     ingredients: string
-    orderNumber: number | null | undefined
+    orderNumber: number | null
     timestamp: number
 }
 
@@ -22,7 +22,7 @@ export class Fertilizer {
     id: string
     name: string
     ingredients: Ingredient[]
-    orderNumber: number | null | undefined
+    orderNumber: number | null
     private timestamp: number
 
     constructor(fertilizer: FertilizerDTO) {
@@ -31,6 +31,10 @@ export class Fertilizer {
         this.ingredients = [...fertilizer.ingredients]
         this.orderNumber = fertilizer.orderNumber || null
         this.timestamp = fertilizer.timestamp
+    }
+
+    static getIds<T extends Fertilizer | FertilizerDTO | FertilizerDB>(fertilizers: T[]): string[] {
+        return fertilizers.map(f => f.id)
     }
 
     toDB(userId: string): FertilizerDB {

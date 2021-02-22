@@ -792,5 +792,35 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    updateFertilizers(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDTO[]> {
+        try {
+            const updateFertilizersPromises = fertilizers.map(async (fertilizer) => {
+                const fertilizerDB = new Fertilizer(fertilizer).toDB(userId)
+                await this._updateFertilizer(fertilizerDB)
+                return fertilizer
+            })
+
+            return Promise.all(updateFertilizersPromises)
+        } catch (err) {
+            throw err
+        }
+    }
+
+    private _updateFertilizer = (fertilizer: FertilizerDB): Promise<FertilizerDB> => {
+        return new Promise<FertilizerDB>((resolve, reject) => {
+            const sql = `UPDATE ${TABLES.FERTILIZER} SET id = ?, name = ?, userID = ?, ingredients = ?, orderNumber = ?, timestamp = ? WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [fertilizer.id, fertilizer.name, fertilizer.userId, fertilizer.ingredients, fertilizer.orderNumber, fertilizer.timestamp,
+                fertilizer.id, fertilizer.userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(fertilizer)
+                })
+        })
+    }
+
 
 }
