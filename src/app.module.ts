@@ -10,6 +10,7 @@ import { LoggerModule } from './modules/logger/logger.module';
 import { Logger } from "./modules/logger/service/logger";
 import { TokenService } from './controllers/user/token/token.service';
 import { FertilizerController } from './controllers/fertilizer/fertilizer.controller';
+import { getClassName } from "@helpers/utils";
 
 @Module({
     imports: [LoggerModule, ConfigModule.forRoot()],
@@ -23,10 +24,10 @@ export class AppModule {
     ) {
         this.database.connectToDatabases()
             .then(() => {
-                this.logger.log('App. Successful connection to the database')
+                this.logger.log(`${getClassName(this)} App. Successful connection to the database`)
             })
             .catch(err => {
-                this.logger.error('App has not connected to the database', err)
+                this.logger.error(`${getClassName(this)} App has not connected to the database. ${JSON.stringify(err)}`)
             })
     }
 }
