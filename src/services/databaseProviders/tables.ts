@@ -10,6 +10,7 @@ export const TABLES = {
 
 
     FERTILIZER: 'FERTILIZER',
+    INGREDIENT: 'INGREDIENT',
 
     ROLE: 'ROLE',
     USER: 'USER',

@@ -18,6 +18,7 @@ import {
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 import { getClassName } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
+import { IngredientDTO, IngredientDB, Ingredient } from "@dto/fertilizer/ingredient";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -706,10 +707,39 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         const addFertilizersPromises = fertilizers.map(async fertilizerDTO => {
             const fertilizer = new Fertilizer(fertilizerDTO)
             const addedFertilizersDB = await this._insertFertilizer(fertilizer.toDB(userId))
+            const addedIngredientsDB = await this._addIngredients(fertilizerDTO)
             return addedFertilizersDB
        })
 
         return Promise.all(addFertilizersPromises)
+
+    }
+
+    private _addIngredients(fertilizerDTO: FertilizerDTO): Promise<IngredientDB[]> {
+        const addIngredientsPromises = fertilizerDTO.ingredients.map(async ingredientDTO => {
+            const ingredient = new Ingredient(ingredientDTO)
+            const insertedIngredientDB = await this._insertIngredient(ingredient.toDB())
+            // TODO: add relation fertilizer--ingredients
+            return insertedIngredientDB
+        })
+
+        return Promise.all(addIngredientsPromises)
+    }
+
+    private _insertIngredient(ingredientDB: IngredientDB): Promise<IngredientDB> {
+        return new Promise<IngredientDB>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.INGREDIENT}(id, valuePercent, chemicalComplexID) VALUES (?, ?, ?)`
+
+            this.database.run(sql,
+                [ingredientDB.id, ingredientDB.valuePercent, ingredientDB.chemicalComplexId],
+                function(err) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(ingredientDB)
+                })
+        })
     }
 
     private _insertFertilizer(fertilizerDB: FertilizerDB): Promise<FertilizerDB> {

@@ -1,10 +1,10 @@
-import { Ingredient } from "./ingredient";
+import { IngredientDTO } from "./ingredient";
 import { getNowTimeSeconds } from "@helpers/utils";
 
 export type FertilizerDTO = {
     id: string
     name: string
-    ingredients: Ingredient[]
+    ingredients: IngredientDTO[]
     orderNumber: number | null | undefined
     timestamp: number
 }
@@ -20,7 +20,7 @@ export type FertilizerDB = {
 export class Fertilizer {
     id: string
     name: string
-    ingredients: Ingredient[]
+    ingredients: IngredientDTO[]
     orderNumber: number | null
     private timestamp: number
 
