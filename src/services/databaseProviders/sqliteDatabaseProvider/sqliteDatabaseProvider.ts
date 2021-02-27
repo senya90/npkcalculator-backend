@@ -702,125 +702,165 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
-        const fertilizersDB = await this._selectFertilizerByUser(userId)
-        return fertilizersDB.map(fertilizerDB => {
-            return {
-                id: fertilizerDB.id,
-                name: fertilizerDB.name,
-                userId: fertilizerDB.userId,
-                ingredients: JSON.parse(fertilizerDB.ingredients),
-                orderNumber: fertilizerDB.orderNumber,
-                timestamp: fertilizerDB.timestamp
-            }
-        })
+    addFertilizer(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDB[]> {
+        const addFertilizersPromises = fertilizers.map(async fertilizerDTO => {
+            const fertilizer = new Fertilizer(fertilizerDTO)
+            const addedFertilizersDB = await this._insertFertilizer(fertilizer.toDB(userId))
+            return addedFertilizersDB
+       })
+
+        return Promise.all(addFertilizersPromises)
     }
 
-    private _selectFertilizerByUser = (userId: string): Promise<FertilizerDB[]> => {
-        return new Promise<FertilizerDB[]>((resolve, reject) => {
-            const sql = `SELECT * FROM ${TABLES.FERTILIZER} WHERE userID = ?`
-
-            this.database.all(sql,
-                [userId],
-                (error, fertilizers: any[]) => {
-                if (error) {
-                    return reject(error)
-                }
-
-                resolve(fertilizers)
-            })
-        })
-    }
-
-    async addFertilizer(fertilizers: Fertilizer[], userId: string): Promise<Fertilizer[]> {
-        try {
-            const addFertilizersPromises = fertilizers.map(async fertilizer => {
-                const fertilizerDB = fertilizer.toDB(userId)
-                await this._insertFertilizer(fertilizerDB)
-                return fertilizer
-            })
-
-            return Promise.all(addFertilizersPromises)
-        } catch (err) {
-            throw err
-        }
-    }
-
-    private _insertFertilizer = (fertilizer: FertilizerDB): Promise<FertilizerDB> => {
+    private _insertFertilizer(fertilizerDB: FertilizerDB): Promise<FertilizerDB> {
         return new Promise<FertilizerDB>((resolve, reject) => {
-            const sql = `INSERT INTO ${TABLES.FERTILIZER}(id, name, userID, ingredients, orderNumber, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
+            const sql = `INSERT INTO ${TABLES.FERTILIZER}(id, name, userID, orderNumber, timestamp) VALUES (?, ?, ?, ?, ?)`
 
             this.database.run(sql,
-                [fertilizer.id, fertilizer.name, fertilizer.userId, fertilizer.ingredients, fertilizer.orderNumber, fertilizer.timestamp],
+                [fertilizerDB.id, fertilizerDB.name, fertilizerDB.userId, fertilizerDB.orderNumber, fertilizerDB.timestamp],
                 function(err) {
                     if (err) {
-                        console.log('err')
-                        console.log(err)
                         return reject(err)
                     }
 
-                    return resolve(fertilizer)
+                    return resolve(fertilizerDB)
                 })
         })
     }
 
     deleteFertilizers(fertilizersIds: string[], userId: string): Promise<string[]> {
-        try {
-            const deleteFertilizersPromises = fertilizersIds.map(async fertilizerId => {
-                await this._deleteFertilizer(fertilizerId, userId)
-                return fertilizerId
-            })
-
-            return Promise.all(deleteFertilizersPromises)
-        } catch (err) {
-            throw err
-        }
+        return Promise.resolve([]);
     }
 
-    private _deleteFertilizer = (fertilizerId: string, userId: string): Promise<string> => {
-        return new Promise<string>((resolve, reject) => {
-            const sql = `DELETE FROM ${TABLES.FERTILIZER} WHERE id = ? AND userID = ?`
-
-            this.database.run(sql,
-                [fertilizerId, userId],
-                (err) => {
-                    if (err) {
-                        return reject(err)
-                    }
-                    return resolve(fertilizerId)
-                })
-        })
+    getFertilizers(userId: string): Promise<FertilizerDTO[]> {
+        return Promise.resolve([]);
     }
 
     updateFertilizers(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDTO[]> {
-        try {
-            const updateFertilizersPromises = fertilizers.map(async (fertilizer) => {
-                const fertilizerDB = new Fertilizer(fertilizer).toDB(userId)
-                await this._updateFertilizer(fertilizerDB)
-                return fertilizer
-            })
-
-            return Promise.all(updateFertilizersPromises)
-        } catch (err) {
-            throw err
-        }
+        return Promise.resolve([]);
     }
 
-    private _updateFertilizer = (fertilizer: FertilizerDB): Promise<FertilizerDB> => {
-        return new Promise<FertilizerDB>((resolve, reject) => {
-            const sql = `UPDATE ${TABLES.FERTILIZER} SET id = ?, name = ?, userID = ?, ingredients = ?, orderNumber = ?, timestamp = ? WHERE id = ? AND userID = ?`
 
-            this.database.run(sql,
-                [fertilizer.id, fertilizer.name, fertilizer.userId, fertilizer.ingredients, fertilizer.orderNumber, fertilizer.timestamp,
-                fertilizer.id, fertilizer.userId],
-                (err) => {
-                    if (err) {
-                        return reject(err)
-                    }
-                    return resolve(fertilizer)
-                })
-        })
-    }
+
+    // async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
+    //     const fertilizersDB = await this._selectFertilizerByUser(userId)
+    //     return fertilizersDB.map(fertilizerDB => {
+    //         return {
+    //             id: fertilizerDB.id,
+    //             name: fertilizerDB.name,
+    //             userId: fertilizerDB.userId,
+    //             ingredients: JSON.parse(fertilizerDB.ingredients),
+    //             orderNumber: fertilizerDB.orderNumber,
+    //             timestamp: fertilizerDB.timestamp
+    //         }
+    //     })
+    // }
+    //
+    // private _selectFertilizerByUser = (userId: string): Promise<FertilizerDB[]> => {
+    //     return new Promise<FertilizerDB[]>((resolve, reject) => {
+    //         const sql = `SELECT * FROM ${TABLES.FERTILIZER} WHERE userID = ?`
+    //
+    //         this.database.all(sql,
+    //             [userId],
+    //             (error, fertilizers: any[]) => {
+    //             if (error) {
+    //                 return reject(error)
+    //             }
+    //
+    //             resolve(fertilizers)
+    //         })
+    //     })
+    // }
+    //
+    // async addFertilizer(fertilizers: Fertilizer[], userId: string): Promise<Fertilizer[]> {
+    //     try {
+    //         const addFertilizersPromises = fertilizers.map(async fertilizer => {
+    //             const fertilizerDB = fertilizer.toDB(userId)
+    //             await this._insertFertilizer(fertilizerDB)
+    //             return fertilizer
+    //         })
+    //
+    //         return Promise.all(addFertilizersPromises)
+    //     } catch (err) {
+    //         throw err
+    //     }
+    // }
+    //
+    // private _insertFertilizer = (fertilizer: FertilizerDB): Promise<FertilizerDB> => {
+    //     return new Promise<FertilizerDB>((resolve, reject) => {
+    //         const sql = `INSERT INTO ${TABLES.FERTILIZER}(id, name, userID, ingredients, orderNumber, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
+    //
+    //         this.database.run(sql,
+    //             [fertilizer.id, fertilizer.name, fertilizer.userId, fertilizer.ingredients, fertilizer.orderNumber, fertilizer.timestamp],
+    //             function(err) {
+    //                 if (err) {
+    //                     console.log('err')
+    //                     console.log(err)
+    //                     return reject(err)
+    //                 }
+    //
+    //                 return resolve(fertilizer)
+    //             })
+    //     })
+    // }
+    //
+    // deleteFertilizers(fertilizersIds: string[], userId: string): Promise<string[]> {
+    //     try {
+    //         const deleteFertilizersPromises = fertilizersIds.map(async fertilizerId => {
+    //             await this._deleteFertilizer(fertilizerId, userId)
+    //             return fertilizerId
+    //         })
+    //
+    //         return Promise.all(deleteFertilizersPromises)
+    //     } catch (err) {
+    //         throw err
+    //     }
+    // }
+    //
+    // private _deleteFertilizer = (fertilizerId: string, userId: string): Promise<string> => {
+    //     return new Promise<string>((resolve, reject) => {
+    //         const sql = `DELETE FROM ${TABLES.FERTILIZER} WHERE id = ? AND userID = ?`
+    //
+    //         this.database.run(sql,
+    //             [fertilizerId, userId],
+    //             (err) => {
+    //                 if (err) {
+    //                     return reject(err)
+    //                 }
+    //                 return resolve(fertilizerId)
+    //             })
+    //     })
+    // }
+    //
+    // updateFertilizers(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDTO[]> {
+    //     try {
+    //         const updateFertilizersPromises = fertilizers.map(async (fertilizer) => {
+    //             const fertilizerDB = new Fertilizer(fertilizer).toDB(userId)
+    //             await this._updateFertilizer(fertilizerDB)
+    //             return fertilizer
+    //         })
+    //
+    //         return Promise.all(updateFertilizersPromises)
+    //     } catch (err) {
+    //         throw err
+    //     }
+    // }
+    //
+    // private _updateFertilizer = (fertilizer: FertilizerDB): Promise<FertilizerDB> => {
+    //     return new Promise<FertilizerDB>((resolve, reject) => {
+    //         const sql = `UPDATE ${TABLES.FERTILIZER} SET id = ?, name = ?, userID = ?, ingredients = ?, orderNumber = ?, timestamp = ? WHERE id = ? AND userID = ?`
+    //
+    //         this.database.run(sql,
+    //             [fertilizer.id, fertilizer.name, fertilizer.userId, fertilizer.ingredients, fertilizer.orderNumber, fertilizer.timestamp,
+    //             fertilizer.id, fertilizer.userId],
+    //             (err) => {
+    //                 if (err) {
+    //                     return reject(err)
+    //                 }
+    //                 return resolve(fertilizer)
+    //             })
+    //     })
+    // }
 
 
 }

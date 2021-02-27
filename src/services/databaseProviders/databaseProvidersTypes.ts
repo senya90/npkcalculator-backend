@@ -23,7 +23,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     deleteComplexesAsTextOnlyAdmin: (chemicalComplexesIds: string[]) => Promise<string[]>
 
     getFertilizers: (userId: string) => Promise<FertilizerDTO[]>
-    addFertilizer: (fertilizers: Fertilizer[], userId: string) => Promise<Fertilizer[]>
+    addFertilizer: (fertilizers: FertilizerDTO[], userId: string) => Promise<FertilizerDB[]>
     deleteFertilizers: (fertilizersIds: string[], userId: string) => Promise<string[]>
     updateFertilizers: (fertilizers: FertilizerDTO[], userId: string) => Promise<FertilizerDTO[]>
 }

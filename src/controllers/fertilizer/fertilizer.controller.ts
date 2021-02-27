@@ -38,8 +38,7 @@ export class FertilizerController {
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             this.logger.log(`${getClassName(this)}#addFertilizer. User id: ${userId} fertilizerDTO: ${JSON.stringify(fertilizerDTO)}`)
-            const fertilizer = new Fertilizer(fertilizerDTO)
-            const addedFertilizers = await this.database.chemical.addFertilizer([fertilizer], userId)
+            const addedFertilizers = await this.database.chemical.addFertilizer([fertilizerDTO], userId)
             this.logger.log(`${getClassName(this)}#addFertilizer. Added: ${JSON.stringify(addedFertilizers.map(fertilizer => fertilizer.name))}`)
             return HelperResponse.getSuccessResponse(addedFertilizers)
         }

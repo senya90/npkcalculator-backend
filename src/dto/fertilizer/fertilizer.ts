@@ -13,7 +13,6 @@ export type FertilizerDB = {
     id: string
     name: string
     userId: string
-    ingredients: string
     orderNumber: number | null
     timestamp: number
 }
@@ -42,7 +41,6 @@ export class Fertilizer {
             id: this.id,
             name: this.name,
             userId: userId,
-            ingredients: JSON.stringify(this.ingredients),
             orderNumber: this.orderNumber,
             timestamp: this.timestamp || getNowTimeSeconds()
         }
