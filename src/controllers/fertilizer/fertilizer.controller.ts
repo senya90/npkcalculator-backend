@@ -37,10 +37,16 @@ export class FertilizerController {
         @GetUser() userId: string
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            this.logger.log(`${getClassName(this)}#addFertilizer. User id: ${userId} fertilizerDTO: ${JSON.stringify(fertilizerDTO)}`)
-            const addedFertilizers = await this.database.chemical.addFertilizer([fertilizerDTO], userId)
-            this.logger.log(`${getClassName(this)}#addFertilizer. Added: ${JSON.stringify(addedFertilizers.map(fertilizer => fertilizer.name))}`)
-            return HelperResponse.getSuccessResponse(addedFertilizers)
+            try {
+                this.logger.log(`${getClassName(this)}#addFertilizer. User id: ${userId} fertilizerDTO: ${JSON.stringify(fertilizerDTO)}`)
+                const addedFertilizers = await this.database.chemical.addFertilizer([fertilizerDTO], userId)
+                this.logger.log(`${getClassName(this)}#addFertilizer. Added: ${JSON.stringify(addedFertilizers.map(fertilizer => fertilizer.name))}`)
+                return HelperResponse.getSuccessResponse(fertilizerDTO)
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#addFertilizer error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
+            }
         }
 
         return HelperResponse.getDBError()
@@ -75,7 +81,7 @@ export class FertilizerController {
                 this.logger.log(`${getClassName(this)}#updateFertilizer. Successfully updated: ${Fertilizer.getIds(updatedFertilizers)}`)
                 return HelperResponse.getSuccessResponse(updatedFertilizers)
             } catch (err) {
-                HelperResponse.getServerError()
+                return HelperResponse.getServerError()
             }
         }
         return HelperResponse.getDBError()
