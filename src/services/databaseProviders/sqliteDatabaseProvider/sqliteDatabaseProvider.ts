@@ -18,7 +18,7 @@ import {
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
 import { getClassName } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
-import { IngredientDTO, IngredientDB, Ingredient } from "@dto/fertilizer/ingredient";
+import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -704,26 +704,60 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     addFertilizer(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDB[]> {
-        const addFertilizersPromises = fertilizers.map(async fertilizerDTO => {
-            const fertilizer = new Fertilizer(fertilizerDTO)
-            const addedFertilizersDB = await this._insertFertilizer(fertilizer.toDB(userId))
-            const addedIngredientsDB = await this._addIngredients(fertilizerDTO)
-            return addedFertilizersDB
-       })
+        try {
+            const addFertilizersPromises = fertilizers.map(async fertilizerDTO => {
+                const fertilizer = new Fertilizer(fertilizerDTO)
+                const addedFertilizersDB = await this._insertFertilizer(fertilizer.toDB(userId))
+                await this._addIngredients(fertilizerDTO)
+                return addedFertilizersDB
+            })
 
-        return Promise.all(addFertilizersPromises)
-
+            return Promise.all(addFertilizersPromises)
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#addFertilizer error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
     }
 
     private _addIngredients(fertilizerDTO: FertilizerDTO): Promise<IngredientDB[]> {
-        const addIngredientsPromises = fertilizerDTO.ingredients.map(async ingredientDTO => {
-            const ingredient = new Ingredient(ingredientDTO)
-            const insertedIngredientDB = await this._insertIngredient(ingredient.toDB())
-            // TODO: add relation fertilizer--ingredients
-            return insertedIngredientDB
-        })
+        try {
+            const addIngredientsPromises = fertilizerDTO.ingredients.map(async ingredientDTO => {
+                const ingredient = new Ingredient(ingredientDTO)
+                const insertedIngredientDB = await this._insertIngredient(ingredient.toDB())
+                await this._insertFertilizerHasIngredientRelation(fertilizerDTO.id, insertedIngredientDB.id)
+                return insertedIngredientDB
+            })
 
-        return Promise.all(addIngredientsPromises)
+            return Promise.all(addIngredientsPromises)
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#_addIngredients error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+
+    }
+
+    private _insertFertilizerHasIngredientRelation(fertilizerId: string, ingredientId: string): Promise<FertilizerIngredientRelationDB> {
+        return new Promise<FertilizerIngredientRelationDB>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.FERTILIZER_HAS_INGREDIENT}(id, fertilizerID, ingredientID) VALUES (?, ?, ?)`
+
+            const relation: FertilizerIngredientRelationDB = {
+                id: IdGenerator.generate(),
+                fertilizerId,
+                ingredientId
+            }
+
+            this.database.run(sql,
+                [relation.id, relation.fertilizerId, relation.ingredientId],
+                function(err) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(relation)
+                })
+        })
     }
 
     private _insertIngredient(ingredientDB: IngredientDB): Promise<IngredientDB> {

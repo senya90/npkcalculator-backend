@@ -13,6 +13,12 @@ export type IngredientDB = {
     chemicalComplexId: string
 }
 
+export type FertilizerIngredientRelationDB = {
+    id: string
+    fertilizerId: string
+    ingredientId: string
+}
+
 export class Ingredient {
     id: string
     valuePercent: number
