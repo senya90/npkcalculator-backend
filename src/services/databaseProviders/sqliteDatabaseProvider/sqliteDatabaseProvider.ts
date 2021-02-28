@@ -796,8 +796,71 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         return Promise.resolve([]);
     }
 
-    getFertilizers(userId: string): Promise<FertilizerDTO[]> {
-        return Promise.resolve([]);
+    async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
+        try {
+            const fertilizersDB = await this._selectFertilizersForUser(userId)
+            console.log('fertilizersDB', fertilizersDB)
+            const ingredientsDB = await this._attachIngredientsToFertilizer(fertilizersDB)
+            return []
+
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#getFertilizers error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
+    private _attachIngredientsToFertilizer(fertilizersDB: FertilizerDB[]): Promise<FertilizerDTO[]> {
+        try {
+            const promises = fertilizersDB.map(async fertilizerDB => {
+                const ingredients =  await this._selectIngredients(fertilizerDB.id)
+                console.log('ingredients', ingredients)
+                return ingredients
+            })
+
+            return Promise.all([])
+        } catch (err) {
+            
+        }
+    }
+
+    private _selectIngredients(fertilizerId: string): Promise<IngredientDB> {
+        return new Promise<IngredientDB>((resolve, reject) => {
+            const sql = `SELECT
+            ${TABLES.INGREDIENT}.id, ${TABLES.INGREDIENT}.valuePercent, 
+            ${TABLES.CHEMICAL_COMPLEX_TEXT}.id, ${TABLES.CHEMICAL_COMPLEX_TEXT}.name, ${TABLES.CHEMICAL_COMPLEX_TEXT}.userID, ${TABLES.CHEMICAL_COMPLEX_TEXT}.chemicalAggregates
+            FROM ${TABLES.FERTILIZER_HAS_INGREDIENT} 
+            JOIN ${TABLES.INGREDIENT} ON ${TABLES.INGREDIENT}.id = ${TABLES.FERTILIZER_HAS_INGREDIENT}.ingredientID 
+            JOIN ${TABLES.CHEMICAL_COMPLEX_TEXT} ON ${TABLES.CHEMICAL_COMPLEX_TEXT}.id = ${TABLES.INGREDIENT}.chemicalComplexID 
+            WHERE fertilizerID = ?`
+
+            this.database.all(sql,
+                [fertilizerId],
+                function(err, dataFotFertilizers: any) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(dataFotFertilizers)
+                })
+
+        })
+    }
+
+    private _selectFertilizersForUser(userId: string): Promise<FertilizerDB[]> {
+        return new Promise<FertilizerDB[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.FERTILIZER} WHERE userID = ?`
+
+            this.database.all(sql,
+                [userId],
+                function(err, fertilizersDB: FertilizerDB[]) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(fertilizersDB)
+                })
+        })
     }
 
     updateFertilizers(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDTO[]> {
