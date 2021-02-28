@@ -799,9 +799,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
         try {
             const fertilizersDB = await this._selectFertilizersForUser(userId)
-            console.log('fertilizersDB', fertilizersDB)
-            const ingredientsDB = await this._attachIngredientsToFertilizer(fertilizersDB)
-            return []
+            return await this._attachIngredientsToFertilizer(fertilizersDB)
 
         } catch (err) {
             this.logger.error(`${getClassName(this)}#getFertilizers error: ${JSON.stringify(err)}`)
@@ -814,21 +812,28 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         try {
             const promises = fertilizersDB.map(async fertilizerDB => {
                 const ingredients =  await this._selectIngredients(fertilizerDB.id)
-                console.log('ingredients', ingredients)
-                return ingredients
+                return {
+                    id: fertilizerDB.id,
+                    name: fertilizerDB.name,
+                    ingredients: ingredients,
+                    orderNumber: fertilizerDB.orderNumber,
+                    timestamp: fertilizerDB.timestamp
+                } as FertilizerDTO
             })
 
-            return Promise.all([])
+            return Promise.all(promises)
         } catch (err) {
-            
+            this.logger.error(`${getClassName(this)}#_attachIngredientsToFertilizer error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
         }
     }
 
-    private _selectIngredients(fertilizerId: string): Promise<IngredientDB> {
-        return new Promise<IngredientDB>((resolve, reject) => {
+    private _selectIngredients(fertilizerId: string): Promise<IngredientDTO[]> {
+        return new Promise<IngredientDTO[]>((resolve, reject) => {
             const sql = `SELECT
             ${TABLES.INGREDIENT}.id, ${TABLES.INGREDIENT}.valuePercent, 
-            ${TABLES.CHEMICAL_COMPLEX_TEXT}.id, ${TABLES.CHEMICAL_COMPLEX_TEXT}.name, ${TABLES.CHEMICAL_COMPLEX_TEXT}.userID, ${TABLES.CHEMICAL_COMPLEX_TEXT}.chemicalAggregates
+            ${TABLES.CHEMICAL_COMPLEX_TEXT}.id as chemicalID, ${TABLES.CHEMICAL_COMPLEX_TEXT}.name, ${TABLES.CHEMICAL_COMPLEX_TEXT}.userID, ${TABLES.CHEMICAL_COMPLEX_TEXT}.chemicalAggregates
             FROM ${TABLES.FERTILIZER_HAS_INGREDIENT} 
             JOIN ${TABLES.INGREDIENT} ON ${TABLES.INGREDIENT}.id = ${TABLES.FERTILIZER_HAS_INGREDIENT}.ingredientID 
             JOIN ${TABLES.CHEMICAL_COMPLEX_TEXT} ON ${TABLES.CHEMICAL_COMPLEX_TEXT}.id = ${TABLES.INGREDIENT}.chemicalComplexID 
@@ -836,14 +841,29 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             this.database.all(sql,
                 [fertilizerId],
-                function(err, dataFotFertilizers: any) {
+                function(err, dataFotIngredients: any[]) {
                     if (err) {
                         return reject(err)
                     }
 
-                    return resolve(dataFotFertilizers)
-                })
+                    const ingredientsDTO = dataFotIngredients.map(ingredientDBComplexDB => {
+                        const chemicalComplexDTO: ChemicalComplexDTO = {
+                            id: ingredientDBComplexDB.chemicalID,
+                            name: ingredientDBComplexDB.name,
+                            userId: ingredientDBComplexDB.userID,
+                            chemicalAggregates: JSON.parse(ingredientDBComplexDB.chemicalAggregates)
+                        }
 
+                        const ingredientDTO: IngredientDTO = {
+                            id: ingredientDBComplexDB.id,
+                            valuePercent: ingredientDBComplexDB.valuePercent,
+                            chemicalComplex: chemicalComplexDTO
+                        }
+
+                        return ingredientDTO
+                    })
+                    return resolve(ingredientsDTO)
+                })
         })
     }
 

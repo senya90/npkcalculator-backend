@@ -1,10 +1,10 @@
-import { ChemicalComplex } from "@dto/chemical/chemicalComplex";
+import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
 import { IdGenerator } from "@helpers/idGenerator/IdGenerator";
 
 export type IngredientDTO = {
     id: string
     valuePercent: number
-    chemicalComplex: ChemicalComplex
+    chemicalComplex: ChemicalComplexDTO | ChemicalComplex
 }
 
 export type IngredientDB = {
@@ -22,7 +22,7 @@ export type FertilizerIngredientRelationDB = {
 export class Ingredient {
     id: string
     valuePercent: number
-    chemicalComplex: ChemicalComplex
+    chemicalComplex: ChemicalComplexDTO | ChemicalComplex
 
     constructor(ingredientDTO: IngredientDTO) {
         this.id = ingredientDTO.id ? ingredientDTO.id : IdGenerator.generate()
