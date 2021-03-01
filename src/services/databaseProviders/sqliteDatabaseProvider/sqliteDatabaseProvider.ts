@@ -36,9 +36,14 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 }
                 this.database = database
                 this.logger.log(`SQLite connection success`)
+                this._useForeignKeysInDB()
                 resolve(this.database)
             })
         })
+    }
+
+    private _useForeignKeysInDB() {
+        this.database.exec("PRAGMA foreign_keys = ON")
     }
 
     getChemicals = (): Promise<ChemicalUnitDto[]> => {
@@ -793,7 +798,62 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     }
 
     deleteFertilizers(fertilizersIds: string[], userId: string): Promise<string[]> {
-        return Promise.resolve([]);
+        try {
+            const deletePromises = fertilizersIds.map(async fertilizerId => {
+                return await this._deleteFertilizer(fertilizerId, userId)
+            })
+
+            return Promise.all(deletePromises)
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#deleteFertilizers error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
+    private async _deleteFertilizer(fertilizerId: string, userId: string): Promise<string> {
+        const ingredients = await this._selectIngredients(fertilizerId)
+        const deletedIngredients = await this._deleteIngredients(ingredients.map(ingredient => ingredient.id))
+        this.logger.debug(`${getClassName(this)}#_deleteFertilizer. deletedIngredients: ${JSON.stringify(deletedIngredients)}`)
+        return await this._deleteFertilizerDB(fertilizerId, userId)
+    }
+
+    private _deleteFertilizerDB(fertilizerId: string, userId: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.FERTILIZER} WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [fertilizerId, userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(fertilizerId)
+                })
+        })
+    }
+
+    private _deleteIngredients(ingredientsIds: string[]): Promise<string[]> {
+        const deletePromises = ingredientsIds.map(async ingredientId => {
+            return await this._deleteIngredientDB(ingredientId)
+        })
+
+        return Promise.all(deletePromises)
+    }
+
+    private _deleteIngredientDB(ingredientId: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.INGREDIENT} WHERE id = ?`
+
+            this.database.run(sql,
+                [ingredientId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(ingredientId)
+                })
+        })
     }
 
     async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
