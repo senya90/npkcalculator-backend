@@ -943,8 +943,42 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    updateFertilizers(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDTO[]> {
-        return Promise.resolve([]);
+    async updateFertilizers(fertilizers: FertilizerDTO[], userId: string): Promise<FertilizerDTO[]> {
+        try {
+            const updateFertilizersPromises = fertilizers.map(async fertilizerDTO => {
+                const oldIngredients = await this._selectIngredients(fertilizerDTO.id)
+                await this._deleteIngredients(oldIngredients.map(ingredient => ingredient.id))
+                const fertilizerDB = new Fertilizer(fertilizerDTO).toDB(userId)
+                await this._updateFertilizer(fertilizerDB)
+                await this._addIngredients(fertilizerDTO)
+                return fertilizerDTO
+            })
+
+            return await Promise.all(updateFertilizersPromises)
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#updateFertilizers error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
+    private _updateFertilizer(fertilizer: FertilizerDB): Promise<FertilizerDB> {
+        return new Promise<FertilizerDB>((resolve, reject) => {
+            const sql = `UPDATE ${TABLES.FERTILIZER} 
+            SET name = ?, userID = ?, orderNumber = ?
+            WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [fertilizer.name, fertilizer.userId, fertilizer.orderNumber,
+                fertilizer.id, fertilizer.userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(fertilizer)
+                })
+        })
+
     }
 
 
