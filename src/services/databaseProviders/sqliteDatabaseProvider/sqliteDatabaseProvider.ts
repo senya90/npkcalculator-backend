@@ -430,7 +430,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    async getComplexForFertilizerIncluding(chemicalComplexesIds: string[], currentUserId?: string): Promise<FertilizersUsingComplexes[]> {
+    async getFertilizersUsingComplexes(chemicalComplexesIds: string[], currentUserId?: string): Promise<FertilizersUsingComplexes[]> {
         try {
             const usingFertilizersPromises = chemicalComplexesIds.map(async chemicalComplexId => {
                 const usingFertilizersDB = await this._selectUsingFertilizersByComplex(chemicalComplexId, currentUserId)
@@ -444,7 +444,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
             return Promise.all(usingFertilizersPromises)
         } catch (err) {
-            this.logger.error(`${getClassName(this)}#checkComplexForFertilizerIncluding error: ${JSON.stringify(err)}`)
+            this.logger.error(`${getClassName(this)}#getFertilizersUsingComplexes error: ${JSON.stringify(err)}`)
             console.log(err)
             throw err
         }

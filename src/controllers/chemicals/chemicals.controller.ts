@@ -4,7 +4,7 @@ import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
 import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
 import { RegistrationService } from "../user/registration/registration.service";
-import { getClassName } from "@helpers/utils";
+import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
@@ -116,6 +116,7 @@ export class ChemicalsController {
     @UseGuards(AuthGuard)
     async deleteComplexes(
         @Body('id') chemicalComplexesIds: string[],
+        @Body('isConfirmed') isConfirmed: boolean,
         @GetUser() userId: string,
         @GetRole() roleId: string
     ): Promise<HttpResponse> {
@@ -123,21 +124,49 @@ export class ChemicalsController {
             try {
                 const role = await this.database.user.getRole(roleId)
 
-                const fertilizerUsingComplexes = await this.database.chemical.getComplexForFertilizerIncluding(chemicalComplexesIds, userId)
-                return HelperResponse.getWarning(
-                    fertilizerUsingComplexes,
-                    ErrorCode(`Current complex used in fertilizers`).warningIncludeFertilizer
-                )
-
                 if (role.name === "admin") {
+                    const fertilizerUsingComplexes = await this.database.chemical.getFertilizersUsingComplexes(chemicalComplexesIds)
+                    if (!isConfirmed) {
+                        if (notEmptyArray(fertilizerUsingComplexes)) {
+                            return HelperResponse.getSuccessResponse({
+                                needToConfirm: true,
+                                fertilizerUsingComplexes,
+                                deletedComplexesIds: []
+                            })
+                        }
+                    }
+
+                    if (notEmptyArray(fertilizerUsingComplexes)) {
+                        // todo: await notify users about changes in user/settings/notifications
+                    }
                     const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds)
                     this.logger.log(`${getClassName(this)}#deleteComplexes. Delete for ADMIN role: ${deletedComplexesIds}`)
-                    return HelperResponse.getSuccessResponse(deletedComplexesIds)
+                    return HelperResponse.getSuccessResponse({
+                        needToConfirm: false,
+                        fertilizerUsingComplexes: [],
+                        deletedComplexesIds: deletedComplexesIds
+                    })
+                }
+
+                if (!isConfirmed) {
+                    const fertilizerUsingComplexes = await this.database.chemical.getFertilizersUsingComplexes(chemicalComplexesIds, userId)
+                    if (notEmptyArray(fertilizerUsingComplexes)) {
+                        return HelperResponse.getSuccessResponse({
+                            needToConfirm: true,
+                            fertilizerUsingComplexes,
+                            deletedComplexesIds: []
+                        })
+                    }
                 }
 
                 const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
                 this.logger.log(`${getClassName(this)}#deleteComplexes. Delete for USER role: ${deletedComplexesIds}`)
-                return HelperResponse.getSuccessResponse(deletedComplexesIds)
+                return HelperResponse.getSuccessResponse({
+                    needToConfirm: false,
+                    fertilizerUsingComplexes: [],
+                    deletedComplexesIds
+                })
+
             } catch (err) {
                 this.logger.error(`${getClassName(this)}#deleteComplexes. err: ${err.message} ${JSON.stringify(err)}`)
                 return HelperResponse.getServerError()
@@ -145,6 +174,10 @@ export class ChemicalsController {
         }
 
         return HelperResponse.getDBError()
+    }
+
+    private _deleteComplexAsAdmin() {
+
     }
 
     @Post('update-chemical-complex')
