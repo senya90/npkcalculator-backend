@@ -12,6 +12,11 @@ export class ErrorResponse {
 
 export const ErrorCode = (text = '') => {
     return {
+        error: {
+            code: 5,
+            message: 'Internal server error',
+            text
+        },
         userNotFound: {
             code: 1,
             message: 'User is not found',
@@ -32,9 +37,9 @@ export const ErrorCode = (text = '') => {
             message: 'Internal server error',
             text
         },
-        error: {
-            code: 5,
-            message: 'Internal server error',
+        warningIncludeFertilizer: {
+            code: 6,
+            message: 'Complexes used in fertilizers',
             text
         }
     }

@@ -32,6 +32,15 @@ export class ChemicalComplex {
         this.chemicalAggregates = chemicalComplex.chemicalAggregates.map(aggregate => new ChemicalAggregate(aggregate))
     }
 
+    static dbToDto(chemicalComplexDB: ChemicalComplexTextDB): ChemicalComplexDTO {
+        return {
+            id: chemicalComplexDB.id,
+            name: chemicalComplexDB.name,
+            chemicalAggregates: JSON.parse(chemicalComplexDB.chemicalAggregates),
+            userId: chemicalComplexDB.userID
+        }
+    }
+
     getAtoms = () => {
         const atoms: ChemicalAtomDTO[] = []
         this.chemicalAggregates.forEach(aggregate => {

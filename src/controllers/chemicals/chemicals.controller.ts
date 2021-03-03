@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Request, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
@@ -10,6 +10,7 @@ import { AuthGuard } from "../../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
 import { GetUser } from "../../customDecorator/getUser";
 import { GetRole } from "../../customDecorator/getRole";
+import { ErrorCode } from "@models/errorResponse";
 
 @Controller('chemicals')
 export class ChemicalsController {
@@ -111,6 +112,7 @@ export class ChemicalsController {
     }
 
     @Post('delete-chemical-complex')
+    @HttpCode(200)
     @UseGuards(AuthGuard)
     async deleteComplexes(
         @Body('id') chemicalComplexesIds: string[],
@@ -120,6 +122,12 @@ export class ChemicalsController {
         if (this.database.isReady()) {
             try {
                 const role = await this.database.user.getRole(roleId)
+
+                const fertilizerUsingComplexes = await this.database.chemical.getComplexForFertilizerIncluding(chemicalComplexesIds, userId)
+                return HelperResponse.getWarning(
+                    fertilizerUsingComplexes,
+                    ErrorCode(`Current complex used in fertilizers`).warningIncludeFertilizer
+                )
 
                 if (role.name === "admin") {
                     const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds)

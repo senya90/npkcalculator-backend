@@ -38,5 +38,13 @@ export const HelperResponse = {
             new ErrorResponse(error.message, error.code, error.text),
             code
         )
+    },
+
+    getWarning: (data: any, error?: ErrorResponse, code = 200) => {
+        return new HttpResponse(
+            data,
+            new ErrorResponse(error.message, error.code, error.text),
+            code
+        )
     }
 }
