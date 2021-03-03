@@ -19,6 +19,7 @@ import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/c
 import { getClassName } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
+import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -314,12 +315,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         const updateChemicalsPromises = chemicalComplexes.map(async complex => {
             const chemicalComplexTextDB = complex.toChemicalComplexTextDB(userId)
             const updatedComplex = await this._updateComplex(chemicalComplexTextDB)
-            const complexDTO: ChemicalComplexDTO = {
-                id: updatedComplex.id,
-                name: updatedComplex.name,
-                chemicalAggregates: JSON.parse(updatedComplex.chemicalAggregates),
-                userId: userId
-            }
+            const complexDTO: ChemicalComplexDTO = ChemicalComplex.dbToDto(updatedComplex)
             return Promise.resolve(complexDTO)
         })
 
@@ -430,6 +426,51 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                     }
 
                     return resolve(chemicalComplexes)
+                })
+        })
+    }
+
+    async getComplexForFertilizerIncluding(chemicalComplexesIds: string[], currentUserId?: string): Promise<FertilizersUsingComplexes[]> {
+        try {
+            const usingFertilizersPromises = chemicalComplexesIds.map(async chemicalComplexId => {
+                const usingFertilizersDB = await this._selectUsingFertilizersByComplex(chemicalComplexId, currentUserId)
+                const fertilizersDTO = await this._attachIngredientsToFertilizer(usingFertilizersDB)
+                const chemicalComplexDB = await this._selectComplex(chemicalComplexId)
+                return {
+                    chemicalComplex: ChemicalComplex.dbToDto(chemicalComplexDB),
+                    fertilizers: fertilizersDTO
+                } as FertilizersUsingComplexes
+            })
+
+            return Promise.all(usingFertilizersPromises)
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#checkComplexForFertilizerIncluding error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
+    private _selectUsingFertilizersByComplex(chemicalComplexId: string, currentUserId?: string): Promise<FertilizerDB[]> {
+        return new Promise<FertilizerDB[]>((resolve, reject) => {
+            let sql = `SELECT
+            ${TABLES.FERTILIZER}.id, ${TABLES.FERTILIZER}.name, ${TABLES.FERTILIZER}.userID, ${TABLES.FERTILIZER}.orderNumber, ${TABLES.FERTILIZER}.timestamp 
+            FROM ${TABLES.INGREDIENT} 
+            JOIN ${TABLES.FERTILIZER_HAS_INGREDIENT} ON ${TABLES.FERTILIZER_HAS_INGREDIENT}.ingredientID = ${TABLES.INGREDIENT}.id 
+            JOIN ${TABLES.FERTILIZER} ON ${TABLES.FERTILIZER}.id = ${TABLES.FERTILIZER_HAS_INGREDIENT}.fertilizerID 
+            WHERE ${TABLES.INGREDIENT}.chemicalComplexID = ?`
+
+            if (currentUserId) {
+                sql += ` AND ${TABLES.FERTILIZER}.userID = ?`
+            }
+
+            this.database.all(sql,
+                [chemicalComplexId, currentUserId],
+                function(err, result: FertilizerDB[]) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(result)
                 })
         })
     }
@@ -866,6 +907,31 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             console.log(err)
             throw err
         }
+    }
+
+    private async _getFertilizersById(fertilizersIds: string[]): Promise<FertilizerDTO[]> {
+        const getFertilizersDBPromises = fertilizersIds.map(async fertilizerId => {
+            return await this._selectFertilizer(fertilizerId)
+        })
+
+        const fertilizersDB = await Promise.all(getFertilizersDBPromises)
+        return await this._attachIngredientsToFertilizer(fertilizersDB)
+    }
+
+    private _selectFertilizer(fertilizerId: string): Promise<FertilizerDB> {
+        return new Promise<FertilizerDB>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.FERTILIZER} WHERE id = ?`
+
+            this.database.all(sql,
+                [fertilizerId],
+                function(err, fertilizersDB: FertilizerDB) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(fertilizersDB)
+                })
+        })
     }
 
     private _attachIngredientsToFertilizer(fertilizersDB: FertilizerDB[]): Promise<FertilizerDTO[]> {
