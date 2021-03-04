@@ -10,7 +10,6 @@ import { AuthGuard } from "../../guards/auth.guard";
 import { TokenService } from "../user/token/token.service";
 import { GetUser } from "../../customDecorator/getUser";
 import { GetRole } from "../../customDecorator/getRole";
-import { ErrorCode } from "@models/errorResponse";
 import { DeleteComplexResponse } from "./chemicalControllerTypes";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 
@@ -144,23 +143,26 @@ export class ChemicalsController {
         return HelperResponse.getDBError()
     }
 
-    private async _deleteComplexesAsUser(chemicalComplexesIds: string[], userId: string, isConfirmed: boolean): Promise<DeleteComplexResponse> {
-        if (!isConfirmed) {
-            const fertilizerUsingComplexes = await this.database.chemical.getFertilizersUsingComplexes(chemicalComplexesIds, userId)
-            if (notEmptyArray(fertilizerUsingComplexes)) {
-                return this._makeResponseForConfirmation(fertilizerUsingComplexes)
-            }
+    private async _deleteComplexesAsUser(chemicalComplexesIds: string[], userId: string, isDeletingConfirmed: boolean): Promise<DeleteComplexResponse> {
+        const fertilizerUsingComplexes = await this.database.chemical.getFertilizersUsingComplexes(chemicalComplexesIds, userId)
+
+        if (notEmptyArray(fertilizerUsingComplexes) && !isDeletingConfirmed) {
+            return this._makeResponseForConfirmation(fertilizerUsingComplexes)
         }
 
         const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextForUser(chemicalComplexesIds, userId)
         this.logger.log(`${getClassName(this)}#deleteComplexes. Delete for USER role: ${deletedComplexesIds}`)
-        return this._makeResponseSuccessDeleting(deletedComplexesIds)
+        return {
+            needToConfirm: false,
+            fertilizerUsingComplexes,
+            deletedComplexesIds
+        }
     }
 
-    private async _deleteComplexesAsAdmin(chemicalComplexesIds: string[], isConfirmed: boolean): Promise<DeleteComplexResponse> {
+    private async _deleteComplexesAsAdmin(chemicalComplexesIds: string[], isDeletingConfirmed: boolean): Promise<DeleteComplexResponse> {
         const fertilizerUsingComplexes = await this.database.chemical.getFertilizersUsingComplexes(chemicalComplexesIds)
 
-        if (!isConfirmed && notEmptyArray(fertilizerUsingComplexes)) {
+        if (notEmptyArray(fertilizerUsingComplexes) && !isDeletingConfirmed) {
             return this._makeResponseForConfirmation(fertilizerUsingComplexes)
         }
 
@@ -170,7 +172,11 @@ export class ChemicalsController {
 
         const deletedComplexesIds = await this.database.chemical.deleteComplexesAsTextOnlyAdmin(chemicalComplexesIds)
         this.logger.log(`${getClassName(this)}#_deleteComplexAsAdmin. Delete for ADMIN role: ${deletedComplexesIds}`)
-        return this._makeResponseSuccessDeleting(deletedComplexesIds)
+        return {
+            needToConfirm: false,
+            fertilizerUsingComplexes,
+            deletedComplexesIds
+        }
     }
 
     private _makeResponseForConfirmation = (fertilizerUsingComplexes: FertilizersUsingComplexes[]): DeleteComplexResponse  => {
@@ -178,14 +184,6 @@ export class ChemicalsController {
             needToConfirm: true,
             fertilizerUsingComplexes,
             deletedComplexesIds: []
-        }
-    }
-
-    private _makeResponseSuccessDeleting = (deletedComplexesIds: string[]): DeleteComplexResponse  => {
-        return {
-            needToConfirm: true,
-            fertilizerUsingComplexes: [],
-            deletedComplexesIds
         }
     }
 
