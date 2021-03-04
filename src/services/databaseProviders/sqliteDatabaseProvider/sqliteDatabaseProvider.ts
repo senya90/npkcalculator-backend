@@ -16,7 +16,7 @@ import {
     ChemicalComplexTextDB
 } from "@dto/chemical/chemicalComplex";
 import { AggregateAtomRelation, ComplexAggregateRelation } from "@dto/chemical/chemicalRelations";
-import { getClassName } from "@helpers/utils";
+import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
@@ -432,17 +432,25 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     async getFertilizersUsingComplexes(chemicalComplexesIds: string[], currentUserId?: string): Promise<FertilizersUsingComplexes[]> {
         try {
-            const usingFertilizersPromises = chemicalComplexesIds.map(async chemicalComplexId => {
-                const usingFertilizersDB = await this._selectUsingFertilizersByComplex(chemicalComplexId, currentUserId)
-                const fertilizersDTO = await this._attachIngredientsToFertilizer(usingFertilizersDB)
-                const chemicalComplexDB = await this._selectComplex(chemicalComplexId)
-                return {
-                    chemicalComplex: ChemicalComplex.dbToDto(chemicalComplexDB),
-                    fertilizers: fertilizersDTO
-                } as FertilizersUsingComplexes
-            })
+            const usingFertilizersPromises = chemicalComplexesIds
+                .map(async chemicalComplexId => {
+                    const usingFertilizersDB = await this._selectUsingFertilizersByComplex(chemicalComplexId, currentUserId)
 
-            return Promise.all(usingFertilizersPromises)
+                    if (notEmptyArray(usingFertilizersDB)) {
+                        const fertilizersDTO = await this._attachIngredientsToFertilizer(usingFertilizersDB)
+                        const chemicalComplexDB = await this._selectComplex(chemicalComplexId)
+                        return {
+                            chemicalComplex: ChemicalComplex.dbToDto(chemicalComplexDB),
+                            fertilizers: fertilizersDTO
+                        } as FertilizersUsingComplexes
+                    }
+
+                    return
+                })
+
+            const fertilizers = await Promise.all(usingFertilizersPromises)
+            return fertilizers.filter(fertilizer => fertilizer)
+
         } catch (err) {
             this.logger.error(`${getClassName(this)}#getFertilizersUsingComplexes error: ${JSON.stringify(err)}`)
             console.log(err)
