@@ -37,12 +37,14 @@ export class SolutionController {
     @Post('add-solution')
     @UseGuards(AuthGuard)
     async addSolution(
-        @Body() solutionsDTO: SolutionDTO[],
+        @Body('solution') solutionsDTO: SolutionDTO[],
         @GetUser() userId: string
     ) {
         if (this.database.isReady()) {
             try {
-                return HelperResponse.getSuccessResponse([])
+                const addedSolutionsDB = await this.database.chemical.addSolutions(solutionsDTO, userId)
+                this.logger.log(`${getClassName(this)}#addSolution. Added: ${JSON.stringify(addedSolutionsDB.map(solution => solution.id))}`)
+                return HelperResponse.getSuccessResponse(addedSolutionsDB.map(solution => solution.id))
 
             } catch (err) {
                 this.logger.error(`${getClassName(this)}#addSolution error: ${JSON.stringify(err)}`)

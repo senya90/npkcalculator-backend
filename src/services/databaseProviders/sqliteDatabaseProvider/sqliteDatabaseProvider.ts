@@ -20,7 +20,8 @@ import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
-import { SolutionDB, SolutionDTO } from "@dto/solution/solution";
+import { Solution, SolutionDB, SolutionDTO } from "@dto/solution/solution";
+import { timestamp } from "rxjs/operators";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -1111,5 +1112,41 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     //             })
     //     })
     // }
+
+
+    addSolutions(solutionsDTO: SolutionDTO[], userId: string): Promise<SolutionDB[]> {
+        try {
+            const promises = solutionsDTO.map(async solutionDTO => {
+                const solutionDB = new Solution(solutionDTO).toDB(userId)
+                const insertedSolutionsDS = await this._insertSolution(solutionDB)
+
+                return insertedSolutionsDS
+            })
+
+            return Promise.all(promises)
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#addSolutions error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+
+    }
+
+    private _insertSolution(solutionDB: SolutionDB): Promise<SolutionDB> {
+        return new Promise<SolutionDB>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.SOLUTION}(id, name, userID, orderNumber, timestamp) VALUES (?, ?, ?, ?, ?)`
+
+            this.database.run(sql,
+                [solutionDB.id, solutionDB.name, solutionDB.userId, solutionDB.orderNumber, solutionDB.timestamp],
+                function(err) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(solutionDB)
+                })
+        })
+
+    }
 
 }
