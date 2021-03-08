@@ -20,7 +20,7 @@ import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
-import { SolutionDTO } from "@dto/solution/solution";
+import { SolutionDB, SolutionDTO } from "@dto/solution/solution";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -1056,10 +1056,60 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     }
 
-    getSolutions(userId: string): Promise<SolutionDTO[]> {
-        return Promise.resolve([]);
+    async getSolutions(userId: string): Promise<SolutionDTO[]> {
+        try {
+            // const solutionsDB = await this._selectSolutionsForUser(userId)
+            // const solutionsDTO = await this._attachDosagesForSolutions()
+
+            return []
+
+
+        } catch (err) {
+
+        }
     }
-
-
+    //
+    // private _attachDosagesForSolutions(solutionsDB: SolutionDB[]): Promise<SolutionDTO[]> {
+    //     const promises = solutionsDB.map(solutionDB => {
+    //         this._selectDosagesForSolution(solutionDB.id)
+    //
+    //     })
+    //
+    //     return Promise.all([])
+    //
+    // }
+    //
+    // private _selectDosagesForSolution(solutionId: string): Promise<any[]> {
+    //     return new Promise<any[]>((resolve, reject) => {
+    //         const sql = `SELECT * FROM ${TABLES.SOLUTION} WHERE userID = ?`
+    //
+    //         this.database.all(sql,
+    //             [solutionId],
+    //             function(err, solutionsDB: SolutionDB[]) {
+    //                 if (err) {
+    //                     return reject(err)
+    //                 }
+    //
+    //                 return resolve(solutionsDB)
+    //             })
+    //     })
+    //
+    // }
+    //
+    // private _selectSolutionsForUser(userId: string): Promise<SolutionDB[]> {
+    //     return new Promise<SolutionDB[]>((resolve, reject) => {
+    //         const sql = `SELECT * FROM ${TABLES.SOLUTION} WHERE userID = ?`
+    //
+    //         this.database.all(sql,
+    //             [userId],
+    //             function(err, solutionsDB: SolutionDB[]) {
+    //                 if (err) {
+    //                     return reject(err)
+    //                 }
+    //
+    //                 return resolve(solutionsDB)
+    //             })
+    //     })
+    // }
 
 }
