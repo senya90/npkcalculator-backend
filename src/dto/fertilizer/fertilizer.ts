@@ -22,9 +22,9 @@ export class Fertilizer {
     name: string
     ingredients: IngredientDTO[]
     orderNumber: number | null
-    private timestamp: number
+    readonly timestamp: number
 
-    constructor(fertilizer: FertilizerDTO) {
+    constructor(fertilizer: FertilizerDTO | Fertilizer) {
         this.id = fertilizer.id
         this.name = fertilizer.name
         this.ingredients = [...fertilizer.ingredients]
@@ -44,9 +44,5 @@ export class Fertilizer {
             orderNumber: this.orderNumber,
             timestamp: this.timestamp || getNowTimeSeconds()
         }
-    }
-
-    createTimestamp() {
-        this.timestamp = getNowTimeSeconds()
     }
 }

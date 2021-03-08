@@ -22,6 +22,7 @@ import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 import { Solution, SolutionDB, SolutionDTO } from "@dto/solution/solution";
 import { timestamp } from "rxjs/operators";
+import { Dosage, DosageDB, DosageDTO } from "@dto/solution/dosage";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -1119,6 +1120,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             const promises = solutionsDTO.map(async solutionDTO => {
                 const solutionDB = new Solution(solutionDTO).toDB(userId)
                 const insertedSolutionsDS = await this._insertSolution(solutionDB)
+                const insertedDosages = await this._addDosages(solutionDTO.dosages)
 
                 return insertedSolutionsDS
             })
@@ -1130,6 +1132,32 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             throw err
         }
 
+    }
+
+    private _addDosages(dosages: DosageDTO[]): Promise<DosageDB[]> {
+        const promises = dosages.map(dosage => {
+            const dosageDB = new Dosage(dosage).toDB()
+            return this._insertDosage(dosageDB)
+            // TODO: insert relations
+        })
+
+        return Promise.all(promises)
+    }
+
+    private _insertDosage(dosageDB: DosageDB): Promise<DosageDB> {
+        return new Promise<DosageDB>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.DOSAGE}(id, valueGram, fertilizerID) VALUES (?, ?, ?)`
+
+            this.database.run(sql,
+                [dosageDB.id, dosageDB.valueGram, dosageDB.fertilizerID],
+                function(err) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(dosageDB)
+                })
+        })
     }
 
     private _insertSolution(solutionDB: SolutionDB): Promise<SolutionDB> {
@@ -1146,7 +1174,5 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                     return resolve(solutionDB)
                 })
         })
-
     }
-
 }
