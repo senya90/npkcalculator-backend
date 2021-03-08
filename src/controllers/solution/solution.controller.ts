@@ -1,10 +1,12 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
 import { HttpResponse } from "@models/httpResponse";
 import { DatabaseService } from "@services/database/database.service";
 import { Logger } from "@modules/logger/service/logger";
 import { HelperResponse } from "@helpers/helperResponse";
 import { AuthGuard } from "src/guards/auth.guard";
 import { GetUser } from "../../customDecorator/getUser";
+import { SolutionDTO } from "@dto/solution/solution";
+import { getClassName } from "@helpers/utils";
 
 @Controller('solution')
 export class SolutionController {
@@ -30,5 +32,25 @@ export class SolutionController {
 
         return HelperResponse.getDBError()
 
+    }
+
+    @Post('add-solution')
+    @UseGuards(AuthGuard)
+    async addSolution(
+        @Body() solutionsDTO: SolutionDTO[],
+        @GetUser() userId: string
+    ) {
+        if (this.database.isReady()) {
+            try {
+                return HelperResponse.getSuccessResponse([])
+
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#addSolution error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
+            }
+        }
+
+        return HelperResponse.getDBError()
     }
 }
