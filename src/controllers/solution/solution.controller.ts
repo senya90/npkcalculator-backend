@@ -23,15 +23,17 @@ export class SolutionController {
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                await this.database.chemical.getSolutions(userId)
-                return HelperResponse.getSuccessResponse([])
+                const solutionsDTO: SolutionDTO[] = await this.database.chemical.getSolutions(userId)
+                this.logger.debug(`${getClassName(this)}#getSolutions for user: ${userId}. Length: ${solutionsDTO.length}`)
+                return HelperResponse.getSuccessResponse(solutionsDTO)
             } catch (err) {
-
+                this.logger.error(`${getClassName(this)}#getSolutions error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
             }
         }
 
         return HelperResponse.getDBError()
-
     }
 
     @Post('add-solution')

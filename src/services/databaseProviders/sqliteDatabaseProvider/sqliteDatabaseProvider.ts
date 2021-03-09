@@ -21,7 +21,6 @@ import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertili
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 import { Solution, SolutionDB, SolutionDosageRelationDB, SolutionDTO } from "@dto/solution/solution";
-import { timestamp } from "rxjs/operators";
 import { Dosage, DosageDB, DosageDTO } from "@dto/solution/dosage";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
@@ -1060,59 +1059,97 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     async getSolutions(userId: string): Promise<SolutionDTO[]> {
         try {
-            // const solutionsDB = await this._selectSolutionsForUser(userId)
-            // const solutionsDTO = await this._attachDosagesForSolutions()
-
-            return []
-
-
+            const solutionsDB = await this._selectSolutionsForUser(userId)
+            return await this._attachDosagesForSolutions(solutionsDB)
         } catch (err) {
-
+            this.logger.error(`${getClassName(this)}#getSolutions error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
         }
     }
-    //
-    // private _attachDosagesForSolutions(solutionsDB: SolutionDB[]): Promise<SolutionDTO[]> {
-    //     const promises = solutionsDB.map(solutionDB => {
-    //         this._selectDosagesForSolution(solutionDB.id)
-    //
-    //     })
-    //
-    //     return Promise.all([])
-    //
-    // }
-    //
-    // private _selectDosagesForSolution(solutionId: string): Promise<any[]> {
-    //     return new Promise<any[]>((resolve, reject) => {
-    //         const sql = `SELECT * FROM ${TABLES.SOLUTION} WHERE userID = ?`
-    //
-    //         this.database.all(sql,
-    //             [solutionId],
-    //             function(err, solutionsDB: SolutionDB[]) {
-    //                 if (err) {
-    //                     return reject(err)
-    //                 }
-    //
-    //                 return resolve(solutionsDB)
-    //             })
-    //     })
-    //
-    // }
-    //
-    // private _selectSolutionsForUser(userId: string): Promise<SolutionDB[]> {
-    //     return new Promise<SolutionDB[]>((resolve, reject) => {
-    //         const sql = `SELECT * FROM ${TABLES.SOLUTION} WHERE userID = ?`
-    //
-    //         this.database.all(sql,
-    //             [userId],
-    //             function(err, solutionsDB: SolutionDB[]) {
-    //                 if (err) {
-    //                     return reject(err)
-    //                 }
-    //
-    //                 return resolve(solutionsDB)
-    //             })
-    //     })
-    // }
+
+    private async _attachDosagesForSolutions(solutionsDB: SolutionDB[]): Promise<SolutionDTO[]> {
+        const promises = solutionsDB.map(async solutionDB => {
+            const dosagesDB = await this._selectDosagesForSolution(solutionDB.id)
+            const dosagesDTO: DosageDTO[] = await this._attachFertilizersToDosages(dosagesDB)
+
+            if (notEmptyArray(dosagesDTO)) {
+                return {
+                    id: solutionDB.id,
+                    name: solutionDB.name,
+                    dosages: [...dosagesDTO],
+                    orderNumber: solutionDB.orderNumber,
+                    timestamp: solutionDB.timestamp
+                } as SolutionDTO
+            }
+
+            return
+        })
+
+        const solutionsDTO: SolutionDTO[] = await Promise.all(promises)
+        return solutionsDTO.filter(solution => solution)
+    }
+
+    private async _attachFertilizersToDosages(dosagesDB: DosageDB[]): Promise<DosageDTO[]> {
+        try{
+            const dosagesPromises = dosagesDB.map(async dosageDB => {
+                const fertilizersDTO = await this._getFertilizersById([dosageDB.fertilizerID])
+                if (notEmptyArray(fertilizersDTO)) {
+                    const targetFertilizer = fertilizersDTO[0]
+                    return {
+                        id: dosageDB.id,
+                        valueGram: dosageDB.valueGram,
+                        fertilizer: targetFertilizer
+                    } as DosageDTO
+                }
+
+                return
+            })
+
+            const dosagesDTO = await Promise.all(dosagesPromises)
+            return dosagesDTO.filter(dosage => dosage)
+        } catch (err) {
+            throw err
+        }
+    }
+
+    private _selectDosagesForSolution(solutionId: string): Promise<DosageDB[]> {
+        return new Promise<DosageDB[]>((resolve, reject) => {
+            const sql = `SELECT 
+            ${TABLES.DOSAGE}.id, ${TABLES.DOSAGE}.valueGram, ${TABLES.DOSAGE}.fertilizerID 
+            FROM ${TABLES.SOLUTION}
+            JOIN ${TABLES.SOLUTION_HAS_DOSAGE} ON ${TABLES.SOLUTION_HAS_DOSAGE}.solutionID = ${TABLES.SOLUTION}.id
+            JOIN ${TABLES.DOSAGE} ON ${TABLES.DOSAGE}.id = ${TABLES.SOLUTION_HAS_DOSAGE}.dosageID
+            WHERE ${TABLES.SOLUTION}.id = ?;`
+
+            this.database.all(sql,
+                [solutionId],
+                function(err, dosageDB: DosageDB[]) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(dosageDB)
+                })
+        })
+
+    }
+
+    private _selectSolutionsForUser(userId: string): Promise<SolutionDB[]> {
+        return new Promise<SolutionDB[]>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.SOLUTION} WHERE userID = ?`
+
+            this.database.all(sql,
+                [userId],
+                function(err, solutionsDB: SolutionDB[]) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(solutionsDB)
+                })
+        })
+    }
 
 
     addSolutions(solutionsDTO: SolutionDTO[], userId: string): Promise<SolutionDB[]> {

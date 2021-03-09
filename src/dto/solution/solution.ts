@@ -1,4 +1,5 @@
 import { getNowTimeSeconds } from "@helpers/utils";
+import { DosageDTO } from "@dto/solution/dosage";
 
 export type SolutionDB = {
     id: string
@@ -11,7 +12,7 @@ export type SolutionDB = {
 export type SolutionDTO = {
     id: string
     name: string
-    dosages: any[]
+    dosages: DosageDTO[]
     orderNumber: number | null
     timestamp: number
 }
@@ -25,7 +26,7 @@ export type SolutionDosageRelationDB = {
 export class Solution {
     id: string
     name: string
-    dosages: any[]
+    dosages: DosageDTO[]
     orderNumber: number | null
     timestamp: number
 
