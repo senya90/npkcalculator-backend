@@ -932,7 +932,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         return new Promise<FertilizerDB>((resolve, reject) => {
             const sql = `SELECT * FROM ${TABLES.FERTILIZER} WHERE id = ?`
 
-            this.database.all(sql,
+            this.database.get(sql,
                 [fertilizerId],
                 function(err, fertilizersDB: FertilizerDB) {
                     if (err) {
