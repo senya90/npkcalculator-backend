@@ -41,7 +41,7 @@ export class SolutionController {
     async addSolution(
         @Body('solution') solutionsDTO: SolutionDTO[],
         @GetUser() userId: string
-    ) {
+    ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
                 const addedSolutionsDB = await this.database.chemical.addSolutions(solutionsDTO, userId)
@@ -50,6 +50,28 @@ export class SolutionController {
 
             } catch (err) {
                 this.logger.error(`${getClassName(this)}#addSolution error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
+            }
+        }
+
+        return HelperResponse.getDBError()
+    }
+
+    @Post('delete-solution')
+    @UseGuards(AuthGuard)
+    async deleteSolution(
+        @Body('id') solutionsIds: string[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                const deletedSolutionsIds: string[] = await this.database.chemical.deleteSolutions(solutionsIds, userId)
+                this.logger.log(`${getClassName(this)}#deleteSolution. Deleted: ${deletedSolutionsIds}`)
+                return HelperResponse.getSuccessResponse(deletedSolutionsIds)
+
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#deleteSolution error: ${JSON.stringify(err)}`)
                 console.log(err)
                 return HelperResponse.getServerError()
             }

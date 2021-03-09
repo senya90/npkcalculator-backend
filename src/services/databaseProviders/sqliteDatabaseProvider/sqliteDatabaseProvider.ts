@@ -1174,9 +1174,8 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     private _addDosages(dosages: DosageDTO[], solutionId: string): Promise<DosageDB[]> {
         const promises = dosages.map(async dosage => {
             const dosageDB = new Dosage(dosage).toDB()
-            const insertedDosage = await this._insertDosage(dosageDB)
-            await this._insertSolutionHasDosagesRelation(solutionId, insertedDosage.id)
-            return insertedDosage
+            await this._insertSolutionHasDosagesRelation(solutionId, dosageDB.id)
+            return await this._insertDosage(dosageDB)
         })
 
         return Promise.all(promises)
@@ -1185,14 +1184,14 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     private _insertSolutionHasDosagesRelation(solutionId: string, dosageId: string): Promise<SolutionDosageRelationDB> {
         return new Promise<SolutionDosageRelationDB>((resolve, reject) => {
             const relation: SolutionDosageRelationDB = {
-                id: IdGenerator.generate(),
-                solutionId,
-                dosageId
+                dosageId,
+                solutionId
             }
-            const sql = `INSERT INTO ${TABLES.SOLUTION_HAS_DOSAGE}(id, solutionID, dosageID) VALUES (?, ?, ?)`
+
+            const sql = `INSERT INTO ${TABLES.SOLUTION_HAS_DOSAGE} (dosageID, solutionID) VALUES (?, ?)`
 
             this.database.run(sql,
-                [relation.id, relation.solutionId, relation.dosageId],
+                [relation.dosageId, relation.solutionId],
                 function(err) {
                     if (err) {
                         return reject(err)
@@ -1205,7 +1204,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     private _insertDosage(dosageDB: DosageDB): Promise<DosageDB> {
         return new Promise<DosageDB>((resolve, reject) => {
-            const sql = `INSERT INTO ${TABLES.DOSAGE}(id, valueGram, fertilizerID) VALUES (?, ?, ?)`
+            const sql = `INSERT INTO ${TABLES.DOSAGE} (id, valueGram, fertilizerID) VALUES (?, ?, ?)`
 
             this.database.run(sql,
                 [dosageDB.id, dosageDB.valueGram, dosageDB.fertilizerID],
@@ -1234,4 +1233,32 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 })
         })
     }
+
+    async deleteSolutions(solutionsIds: string[], userId: string): Promise<string[]> {
+        try {
+            const deletePromises = solutionsIds.map(solutionId => {
+                return this._deleteSolution(solutionId, userId)
+            })
+
+            return Promise.all(deletePromises)
+        } catch (err) {
+            throw err
+        }
+    }
+
+    private _deleteSolution(solutionId: string, userId: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.SOLUTION} WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [solutionId, userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(solutionId)
+                })
+        })
+    }
+
 }

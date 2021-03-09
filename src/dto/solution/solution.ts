@@ -18,7 +18,6 @@ export type SolutionDTO = {
 }
 
 export type SolutionDosageRelationDB = {
-    id: string
     solutionId: string
     dosageId: string
 }
