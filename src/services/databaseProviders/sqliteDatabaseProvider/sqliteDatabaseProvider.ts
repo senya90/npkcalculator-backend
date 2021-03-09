@@ -20,7 +20,7 @@ import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
-import { Solution, SolutionDB, SolutionDTO } from "@dto/solution/solution";
+import { Solution, SolutionDB, SolutionDosageRelationDB, SolutionDTO } from "@dto/solution/solution";
 import { timestamp } from "rxjs/operators";
 import { Dosage, DosageDB, DosageDTO } from "@dto/solution/dosage";
 
@@ -1120,7 +1120,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             const promises = solutionsDTO.map(async solutionDTO => {
                 const solutionDB = new Solution(solutionDTO).toDB(userId)
                 const insertedSolutionsDS = await this._insertSolution(solutionDB)
-                const insertedDosages = await this._addDosages(solutionDTO.dosages)
+                await this._addDosages(solutionDTO.dosages, solutionDTO.id)
 
                 return insertedSolutionsDS
             })
@@ -1134,14 +1134,36 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     }
 
-    private _addDosages(dosages: DosageDTO[]): Promise<DosageDB[]> {
-        const promises = dosages.map(dosage => {
+    private _addDosages(dosages: DosageDTO[], solutionId: string): Promise<DosageDB[]> {
+        const promises = dosages.map(async dosage => {
             const dosageDB = new Dosage(dosage).toDB()
-            return this._insertDosage(dosageDB)
-            // TODO: insert relations
+            const insertedDosage = await this._insertDosage(dosageDB)
+            await this._insertSolutionHasDosagesRelation(solutionId, insertedDosage.id)
+            return insertedDosage
         })
 
         return Promise.all(promises)
+    }
+
+    private _insertSolutionHasDosagesRelation(solutionId: string, dosageId: string): Promise<SolutionDosageRelationDB> {
+        return new Promise<SolutionDosageRelationDB>((resolve, reject) => {
+            const relation: SolutionDosageRelationDB = {
+                id: IdGenerator.generate(),
+                solutionId,
+                dosageId
+            }
+            const sql = `INSERT INTO ${TABLES.SOLUTION_HAS_DOSAGE}(id, solutionID, dosageID) VALUES (?, ?, ?)`
+
+            this.database.run(sql,
+                [relation.id, relation.solutionId, relation.dosageId],
+                function(err) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(relation)
+                })
+        })
     }
 
     private _insertDosage(dosageDB: DosageDB): Promise<DosageDB> {

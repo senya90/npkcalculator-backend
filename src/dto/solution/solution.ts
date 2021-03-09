@@ -16,6 +16,12 @@ export type SolutionDTO = {
     timestamp: number
 }
 
+export type SolutionDosageRelationDB = {
+    id: string
+    solutionId: string
+    dosageId: string
+}
+
 export class Solution {
     id: string
     name: string
