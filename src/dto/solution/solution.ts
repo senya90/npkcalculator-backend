@@ -1,5 +1,6 @@
 import { getNowTimeSeconds } from "@helpers/utils";
 import { DosageDTO } from "@dto/solution/dosage";
+import { FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 
 export type SolutionDB = {
     id: string
@@ -30,6 +31,10 @@ export class Solution {
         this.dosages = [...solutionDTO.dosages]
         this.orderNumber = solutionDTO.orderNumber
         this.timestamp = solutionDTO.timestamp
+    }
+
+    static getIds<T extends Solution | SolutionDB | SolutionDTO>(solution: T[]): string[] {
+        return solution.map(s => s.id)
     }
 
     toDB(userId: string): SolutionDB {

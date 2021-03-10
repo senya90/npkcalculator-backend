@@ -1068,6 +1068,23 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         }
     }
 
+    getSolutionsById(solutionsIds: string[], userId: string): Promise<SolutionDTO[]> {
+        try {
+            const promises = solutionsIds.map(async solutionId => {
+                const solutionDB = await this._selectSolutionByIdForUser(solutionId, userId)
+                const solutions = await this._attachDosagesForSolutions([solutionDB])
+                return solutions[0]
+            })
+
+            return Promise.all(promises)
+
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#getSolutionsById error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
     private async _attachDosagesForSolutions(solutionsDB: SolutionDB[]): Promise<SolutionDTO[]> {
         const promises = solutionsDB.map(async solutionDB => {
             const dosagesDB = await this._selectDosagesForSolution(solutionDB.id)
@@ -1132,6 +1149,22 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                 })
         })
 
+    }
+
+    private _selectSolutionByIdForUser(solutionId: string, userId: string): Promise<SolutionDB> {
+        return new Promise<SolutionDB>((resolve, reject) => {
+            const sql = `SELECT * FROM ${TABLES.SOLUTION} WHERE id = ? AND userID = ?`
+
+            this.database.get(sql,
+                [solutionId, userId],
+                function(err, solutionsDB: SolutionDB) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(solutionsDB)
+                })
+        })
     }
 
     private _selectSolutionsForUser(userId: string): Promise<SolutionDB[]> {
@@ -1238,18 +1271,18 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    async updateSolutions(solutionsDTO: SolutionDTO[], userId: string): Promise<SolutionDB[]> {
+    async updateSolutions(solutionsDTO: SolutionDTO[], userId: string): Promise<SolutionDTO[]> {
         try {
             const promises = solutionsDTO.map(async solutionDTO => {
                 const solutionDB = new Solution(solutionDTO).toDB(userId)
-                const deleted = await this._deleteDosagesForSolution(solutionDB.id) // conflict for foreign keys ?
-                console.log('deleted', deleted)
+                await this._deleteDosagesForSolution(solutionDB.id)
                 const updatedSolutionsDB = await this._updateSolution(solutionDB)
                 await this._addDosages(solutionDTO.dosages, solutionDTO.id)
                 return updatedSolutionsDB
             })
 
-            return Promise.all(promises)
+            const solutions = await Promise.all(promises)
+            return this.getSolutionsById(Solution.getIds(solutions), userId)
 
         } catch (err) {
             this.logger.error(`${getClassName(this)}#addSolutions error: ${JSON.stringify(err)}`)
@@ -1276,28 +1309,18 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    private async _deleteDosagesForSolution(solutionId: string): Promise<string[]> {
-        const dosagesDB = await this._selectDosagesForSolution(solutionId)
-        const deletePromises = dosagesDB.map(dosageDB => {
-            return this._deleteDosage(dosageDB.id)
-        })
-
-        return Promise.all(deletePromises)
-    }
-
-    private _deleteDosage(dosageId: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            const sql = `DELETE FROM ${TABLES.DOSAGE} WHERE id = ?`
+    private async _deleteDosagesForSolution(solutionId: string): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.DOSAGE} WHERE solutionID = ?`
 
             this.database.run(sql,
-                [dosageId],
+                [solutionId],
                 (err) => {
                     if (err) {
                         return reject(err)
                     }
-                    return resolve(dosageId)
+                    return resolve(true)
                 })
         })
     }
-
 }

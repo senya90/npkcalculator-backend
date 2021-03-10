@@ -87,9 +87,10 @@ export class SolutionController {
         @GetUser() userId: string
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
-            console.log('solutionsDTO', solutionsDTO)
+            this.logger.debug(`${getClassName(this)}#updateSolution. Need to update: ${JSON.stringify(solutionsDTO)}`)
             const updatedSolutions = await this.database.chemical.updateSolutions(solutionsDTO, userId)
             const ids = updatedSolutions.map(solution => solution.id)
+            this.logger.debug(`${getClassName(this)}#updateSolution. Updated: ${JSON.stringify(updatedSolutions)}`)
             this.logger.log(`${getClassName(this)}#updateSolution. Updated: ${ids}`)
             return HelperResponse.getSuccessResponse(ids)
         }
