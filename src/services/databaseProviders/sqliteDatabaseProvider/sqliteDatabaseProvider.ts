@@ -1261,4 +1261,66 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    async updateSolutions(solutionsDTO: SolutionDTO[], userId: string): Promise<SolutionDB[]> {
+        try {
+            const promises = solutionsDTO.map(async solutionDTO => {
+                const solutionDB = new Solution(solutionDTO).toDB(userId)
+                const deleted = await this._deleteDosagesForSolution(solutionDB.id) // conflict for foreign keys ?
+                console.log('deleted', deleted)
+                const updatedSolutionsDB = await this._updateSolution(solutionDB)
+                await this._addDosages(solutionDTO.dosages, solutionDTO.id)
+                return updatedSolutionsDB
+            })
+
+            return Promise.all(promises)
+
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#addSolutions error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
+    private async _updateSolution(solutionDB: SolutionDB): Promise<SolutionDB> {
+        return new Promise<SolutionDB>((resolve, reject) => {
+            const sql = `UPDATE ${TABLES.SOLUTION} 
+            SET name = ?, orderNumber = ?
+            WHERE id = ? AND userID = ?`
+
+            this.database.run(sql,
+                [solutionDB.name, solutionDB.orderNumber,
+                    solutionDB.id, solutionDB.userId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(solutionDB)
+                })
+        })
+    }
+
+    private async _deleteDosagesForSolution(solutionId: string): Promise<string[]> {
+        const dosagesDB = await this._selectDosagesForSolution(solutionId)
+        const deletePromises = dosagesDB.map(dosageDB => {
+            return this._deleteDosage(dosageDB.id)
+        })
+
+        return Promise.all(deletePromises)
+    }
+
+    private _deleteDosage(dosageId: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const sql = `DELETE FROM ${TABLES.DOSAGE} WHERE id = ?`
+
+            this.database.run(sql,
+                [dosageId],
+                (err) => {
+                    if (err) {
+                        return reject(err)
+                    }
+                    return resolve(dosageId)
+                })
+        })
+    }
+
 }

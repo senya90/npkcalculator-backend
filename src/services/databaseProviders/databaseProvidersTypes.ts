@@ -33,6 +33,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     getSolutions: (userId: string) => Promise<SolutionDTO[]>
     addSolutions: (solutionsDTO: SolutionDTO[], userId: string) => Promise<SolutionDB[]>
     deleteSolutions: (solutionsIds: string[], userId: string) => Promise<string[]>
+    updateSolutions: (solutionsDTO: SolutionDTO[], userId: string) => Promise<SolutionDB[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {

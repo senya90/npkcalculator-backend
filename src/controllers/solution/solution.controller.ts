@@ -79,4 +79,21 @@ export class SolutionController {
 
         return HelperResponse.getDBError()
     }
+
+    @Post('update-solution')
+    @UseGuards(AuthGuard)
+    async updateSolution(
+        @Body('solution') solutionsDTO: SolutionDTO[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            console.log('solutionsDTO', solutionsDTO)
+            const updatedSolutions = await this.database.chemical.updateSolutions(solutionsDTO, userId)
+            const ids = updatedSolutions.map(solution => solution.id)
+            this.logger.log(`${getClassName(this)}#updateSolution. Updated: ${ids}`)
+            return HelperResponse.getSuccessResponse(ids)
+        }
+
+        return HelperResponse.getDBError()
+    }
 }
