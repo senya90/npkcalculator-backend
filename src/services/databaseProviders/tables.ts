@@ -15,7 +15,6 @@ export const TABLES = {
 
     SOLUTION: 'SOLUTION',
     DOSAGE: 'DOSAGE',
-    SOLUTION_HAS_DOSAGE: 'SOLUTION_HAS_DOSAGE',
 
     ROLE: 'ROLE',
     USER: 'USER',

@@ -20,7 +20,7 @@ import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB } from "@dto/fertilizer/ingredient";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
-import { Solution, SolutionDB, SolutionDosageRelationDB, SolutionDTO } from "@dto/solution/solution";
+import { Solution, SolutionDB, SolutionDTO } from "@dto/solution/solution";
 import { Dosage, DosageDB, DosageDTO } from "@dto/solution/dosage";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
@@ -1095,7 +1095,7 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             const dosagesPromises = dosagesDB.map(async dosageDB => {
                 const fertilizersDTO = await this._getFertilizersById([dosageDB.fertilizerID])
                 if (notEmptyArray(fertilizersDTO)) {
-                    const targetFertilizer = fertilizersDTO[0]
+                    const targetFertilizer: FertilizerDTO = fertilizersDTO[0]
                     return {
                         id: dosageDB.id,
                         valueGram: dosageDB.valueGram,
@@ -1116,10 +1116,9 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
     private _selectDosagesForSolution(solutionId: string): Promise<DosageDB[]> {
         return new Promise<DosageDB[]>((resolve, reject) => {
             const sql = `SELECT 
-            ${TABLES.DOSAGE}.id, ${TABLES.DOSAGE}.valueGram, ${TABLES.DOSAGE}.fertilizerID 
-            FROM ${TABLES.SOLUTION}
-            JOIN ${TABLES.SOLUTION_HAS_DOSAGE} ON ${TABLES.SOLUTION_HAS_DOSAGE}.solutionID = ${TABLES.SOLUTION}.id
-            JOIN ${TABLES.DOSAGE} ON ${TABLES.DOSAGE}.id = ${TABLES.SOLUTION_HAS_DOSAGE}.dosageID
+            ${TABLES.DOSAGE}.id, ${TABLES.DOSAGE}.valueGram, ${TABLES.DOSAGE}.solutionID, ${TABLES.DOSAGE}.fertilizerID 
+            FROM ${TABLES.DOSAGE}
+            JOIN ${TABLES.SOLUTION} ON ${TABLES.SOLUTION}.id = ${TABLES.DOSAGE}.solutionID
             WHERE ${TABLES.SOLUTION}.id = ?;`
 
             this.database.all(sql,
@@ -1173,41 +1172,19 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
 
     private _addDosages(dosages: DosageDTO[], solutionId: string): Promise<DosageDB[]> {
         const promises = dosages.map(async dosage => {
-            const dosageDB = new Dosage(dosage).toDB()
-            await this._insertSolutionHasDosagesRelation(solutionId, dosageDB.id)
+            const dosageDB = new Dosage(dosage).toDB(solutionId)
             return await this._insertDosage(dosageDB)
         })
 
         return Promise.all(promises)
     }
 
-    private _insertSolutionHasDosagesRelation(solutionId: string, dosageId: string): Promise<SolutionDosageRelationDB> {
-        return new Promise<SolutionDosageRelationDB>((resolve, reject) => {
-            const relation: SolutionDosageRelationDB = {
-                dosageId,
-                solutionId
-            }
-
-            const sql = `INSERT INTO ${TABLES.SOLUTION_HAS_DOSAGE} (dosageID, solutionID) VALUES (?, ?)`
-
-            this.database.run(sql,
-                [relation.dosageId, relation.solutionId],
-                function(err) {
-                    if (err) {
-                        return reject(err)
-                    }
-
-                    return resolve(relation)
-                })
-        })
-    }
-
     private _insertDosage(dosageDB: DosageDB): Promise<DosageDB> {
         return new Promise<DosageDB>((resolve, reject) => {
-            const sql = `INSERT INTO ${TABLES.DOSAGE} (id, valueGram, fertilizerID) VALUES (?, ?, ?)`
+            const sql = `INSERT INTO ${TABLES.DOSAGE} (id, valueGram, solutionID, fertilizerID) VALUES (?, ?, ?, ?)`
 
             this.database.run(sql,
-                [dosageDB.id, dosageDB.valueGram, dosageDB.fertilizerID],
+                [dosageDB.id, dosageDB.valueGram, dosageDB.solutionID, dosageDB.fertilizerID],
                 function(err) {
                     if (err) {
                         return reject(err)

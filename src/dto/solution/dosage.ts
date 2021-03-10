@@ -9,6 +9,7 @@ export type DosageDTO = {
 export type DosageDB = {
     id: string
     valueGram: number
+    solutionID: string
     fertilizerID: string
 }
 
@@ -23,11 +24,12 @@ export class Dosage {
         this.fertilizer = new Fertilizer(dosageDTO.fertilizer)
     }
 
-    toDB(): DosageDB {
+    toDB(solutionId: string): DosageDB {
         return {
             id: this.id,
             valueGram: this.valueGram,
-            fertilizerID: this.fertilizer.id
+            fertilizerID: this.fertilizer.id,
+            solutionID: solutionId
         }
     }
 }
