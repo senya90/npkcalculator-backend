@@ -1090,21 +1090,16 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
             const dosagesDB = await this._selectDosagesForSolution(solutionDB.id)
             const dosagesDTO: DosageDTO[] = await this._attachFertilizersToDosages(dosagesDB)
 
-            if (notEmptyArray(dosagesDTO)) {
-                return {
-                    id: solutionDB.id,
-                    name: solutionDB.name,
-                    dosages: [...dosagesDTO],
-                    orderNumber: solutionDB.orderNumber,
-                    timestamp: solutionDB.timestamp
-                } as SolutionDTO
-            }
-
-            return
+            return {
+                id: solutionDB.id,
+                name: solutionDB.name,
+                dosages: [...dosagesDTO],
+                orderNumber: solutionDB.orderNumber,
+                timestamp: solutionDB.timestamp
+            } as SolutionDTO
         })
 
-        const solutionsDTO: SolutionDTO[] = await Promise.all(promises)
-        return solutionsDTO.filter(solution => solution)
+        return Promise.all(promises)
     }
 
     private async _attachFertilizersToDosages(dosagesDB: DosageDB[]): Promise<DosageDTO[]> {
