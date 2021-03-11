@@ -6,6 +6,7 @@ import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalCompl
 import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 import { SolutionDB, SolutionDTO } from "@dto/solution/solution";
+import { SolutionsUsingFertilizer } from "@dto/solution/solutionsUsingFertilizer";
 
 export interface IDatabaseProvider {
     connect: (databaseName: string, databaseUrl: string) => Promise<any>
@@ -28,6 +29,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     getFertilizers: (userId: string) => Promise<FertilizerDTO[]>
     addFertilizer: (fertilizers: FertilizerDTO[], userId: string) => Promise<FertilizerDB[]>
     deleteFertilizers: (fertilizersIds: string[], userId: string) => Promise<string[]>
+    getSolutionsUsingFertilizers: (fertilizersIds: string[], userId: string) => Promise<SolutionsUsingFertilizer[]>
     updateFertilizers: (fertilizers: FertilizerDTO[], userId: string) => Promise<FertilizerDTO[]>
 
     getSolutions: (userId: string) => Promise<SolutionDTO[]>

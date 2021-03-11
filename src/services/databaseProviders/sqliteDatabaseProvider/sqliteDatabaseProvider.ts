@@ -22,6 +22,7 @@ import { IngredientDTO, IngredientDB, Ingredient, FertilizerIngredientRelationDB
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 import { Solution, SolutionDB, SolutionDTO } from "@dto/solution/solution";
 import { Dosage, DosageDB, DosageDTO } from "@dto/solution/dosage";
+import { SolutionsUsingFertilizer } from "@dto/solution/solutionsUsingFertilizer";
 
 export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserDatabaseProvider {
     private database: Database
@@ -905,6 +906,10 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
                     return resolve(ingredientId)
                 })
         })
+    }
+
+    getSolutionsUsingFertilizers(fertilizersIds: string[], userId: string): Promise<SolutionsUsingFertilizer[]> {
+        return Promise.resolve([]);
     }
 
     async getFertilizers(userId: string): Promise<FertilizerDTO[]> {
