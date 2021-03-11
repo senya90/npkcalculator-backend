@@ -908,8 +908,54 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
-    getSolutionsUsingFertilizers(fertilizersIds: string[], userId: string): Promise<SolutionsUsingFertilizer[]> {
-        return Promise.resolve([]);
+    async getSolutionsUsingFertilizers(fertilizersIds: string[], userId: string): Promise<SolutionsUsingFertilizer[]> {
+        try {
+            const promises = fertilizersIds.map(async fertilizerId => {
+                const solutionsDB: SolutionDB[] = await this._selectSolutionsByFertilizer(fertilizerId, userId)
+
+                if (notEmptyArray(solutionsDB)) {
+                    const solutionsDTO = await this.getSolutionsById(Solution.getIds(solutionsDB), userId)
+                    const fertilizersDTO = await this._getFertilizersById([fertilizerId])
+                    const targetFertilizer = fertilizersDTO[0]
+
+                    return {
+                        fertilizer: targetFertilizer,
+                        solutions: solutionsDTO
+                    } as SolutionsUsingFertilizer
+
+                }
+
+                return
+            })
+
+            const solutionsUsingFertilizers = await Promise.all(promises)
+            return solutionsUsingFertilizers.filter(solution => solution)
+
+        } catch (err) {
+            this.logger.error(`${getClassName(this)}#getSolutionsUsingFertilizers error: ${JSON.stringify(err)}`)
+            console.log(err)
+            throw err
+        }
+    }
+
+    private _selectSolutionsByFertilizer(fertilizerId: string, userId: string): Promise<SolutionDB[]> {
+        return new Promise<SolutionDB[]>((resolve, reject) => {
+            const sql = `SELECT 
+            ${TABLES.SOLUTION}.id, ${TABLES.SOLUTION}.name, ${TABLES.SOLUTION}.userID, ${TABLES.SOLUTION}.orderNumber, ${TABLES.SOLUTION}.timestamp
+            FROM ${TABLES.SOLUTION}
+            JOIN ${TABLES.DOSAGE} ON ${TABLES.DOSAGE}.solutionID = ${TABLES.SOLUTION}.id
+            WHERE ${TABLES.DOSAGE}.fertilizerID = ? AND ${TABLES.SOLUTION}.userID = ?;`
+
+            this.database.all(sql,
+                [fertilizerId, userId],
+                function(err, solutionsDB: SolutionDB[]) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(solutionsDB)
+                })
+        })
     }
 
     async getFertilizers(userId: string): Promise<FertilizerDTO[]> {

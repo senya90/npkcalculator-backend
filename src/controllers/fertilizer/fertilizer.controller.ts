@@ -5,8 +5,10 @@ import { DatabaseService } from "@services/database/database.service";
 import { Logger } from "@modules/logger/service/logger";
 import { AuthGuard } from "../../guards/auth.guard";
 import { GetUser } from "../../customDecorator/getUser";
-import { getClassName } from "@helpers/utils";
+import { getClassName, notEmptyArray } from "@helpers/utils";
 import { Fertilizer, FertilizerDTO } from "@dto/fertilizer/fertilizer";
+import { SolutionsUsingFertilizer } from "@dto/solution/solutionsUsingFertilizer";
+import { DeleteFertilizerResponse } from "./fertilizerControllerTypes";
 
 @Controller('fertilizer')
 export class FertilizerController {
@@ -56,13 +58,28 @@ export class FertilizerController {
     @UseGuards(AuthGuard)
     async deleteFertilizer(
         @Body('id') fertilizersIds: string[],
+        @Body('isConfirmed') isConfirmed: boolean,
         @GetUser() userId: string
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
+            const solutionsUsingFertilizers = await this.database.chemical.getSolutionsUsingFertilizers(fertilizersIds, userId)
+
+            if (notEmptyArray(solutionsUsingFertilizers) && !isConfirmed) {
+                return HelperResponse.getSuccessResponse({
+                    needToConfirm: true,
+                    solutionsUsingFertilizers,
+                    deletedFertilizersIds: []
+                } as DeleteFertilizerResponse)
+            }
+
             this.logger.log(`${getClassName(this)}#deleteFertilizer. User id: ${userId} fertilizers: ${JSON.stringify(fertilizersIds)}`)
             const deletedFertilizersIds = await this.database.chemical.deleteFertilizers(fertilizersIds, userId)
             this.logger.log(`${getClassName(this)}#deleteFertilizer. Successfully deleted: ${JSON.stringify(deletedFertilizersIds)}`)
-            return HelperResponse.getSuccessResponse(deletedFertilizersIds)
+            return HelperResponse.getSuccessResponse({
+                needToConfirm: false,
+                deletedFertilizersIds,
+                solutionsUsingFertilizers
+            } as DeleteFertilizerResponse)
         }
 
         return HelperResponse.getDBError()
