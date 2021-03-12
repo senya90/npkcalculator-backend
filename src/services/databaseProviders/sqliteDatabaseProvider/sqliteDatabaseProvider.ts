@@ -1398,4 +1398,32 @@ export class SqliteDatabaseProvider implements IChemicalDatabaseProvider, IUserD
         })
     }
 
+    addAgricultures(agriculturesDTO: AgricultureDTO[], userId: string): Promise<AgricultureDTO[]> {
+        const promises = agriculturesDTO.map(async agricultureDTO => {
+            const agricultureDB = new Agriculture(agricultureDTO).toDB(userId)
+            const addedAgricultureDB = await this._insertAgriculture(agricultureDB)
+            return Agriculture.fromDBToDTO(addedAgricultureDB)
+        })
+
+        return Promise.all(promises)
+    }
+
+    private _insertAgriculture(agricultureDB: AgricultureDB): Promise<AgricultureDB> {
+        return new Promise<AgricultureDB>((resolve, reject) => {
+            const sql = `INSERT INTO ${TABLES.AGRICULTURE}(id, name, userID, vegetation, bloom) VALUES (?, ?, ?, ?, ?)`
+
+            this.database.run(sql,
+                [agricultureDB.id, agricultureDB.name, agricultureDB.userId, agricultureDB.vegetation, agricultureDB.bloom],
+                function(err) {
+                    if (err) {
+                        return reject(err)
+                    }
+
+                    return resolve(agricultureDB)
+                })
+        })
+    }
+
+
+
 }

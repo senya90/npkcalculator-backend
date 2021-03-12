@@ -1,4 +1,4 @@
-import { Get, UseGuards } from "@nestjs/common";
+import { Body, Get, Post, UseGuards } from "@nestjs/common";
 import { Controller } from '@nestjs/common';
 import { AuthGuard } from "src/guards/auth.guard";
 import { GetUser } from "../../customDecorator/getUser";
@@ -7,6 +7,7 @@ import { Logger } from "@modules/logger/service/logger";
 import { HttpResponse } from "@models/httpResponse";
 import { HelperResponse } from "@helpers/helperResponse";
 import { getClassName } from "@helpers/utils";
+import { AgricultureDTO } from "@dto/agriculture/agriculture";
 
 @Controller('agriculture')
 export class AgricultureController {
@@ -37,4 +38,26 @@ export class AgricultureController {
         return HelperResponse.getDBError()
     }
 
+
+    @Post('add-agriculture')
+    @UseGuards(AuthGuard)
+    async addAgricultures(
+        @Body('agriculture') agriculturesDTO: AgricultureDTO[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                this.logger.log(`${getClassName(this)}#addAgricultures. Need to add: ${agriculturesDTO.map(a => a.id)}`)
+                const addedAgricultures = await this.database.chemical.addAgricultures(agriculturesDTO, userId)
+                this.logger.log(`${getClassName(this)}#addAgricultures. Added: ${JSON.stringify(addedAgricultures)}`)
+                return HelperResponse.getSuccessResponse(addedAgricultures)
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#addAgricultures error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
+            }
+        }
+
+        return HelperResponse.getDBError()
+    }
 }

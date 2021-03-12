@@ -40,6 +40,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     updateSolutions: (solutionsDTO: SolutionDTO[], userId: string) => Promise<SolutionDTO[]>
 
     getAllAgricultures: (userId: string) => Promise<AgricultureDTO[]>
+    addAgricultures: (agriculturesDTO: AgricultureDTO[], userId: string) => Promise<AgricultureDTO[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
