@@ -12,10 +12,11 @@ import { TokenService } from './controllers/user/token/token.service';
 import { FertilizerController } from './controllers/fertilizer/fertilizer.controller';
 import { getClassName } from "@helpers/utils";
 import { SolutionController } from './controllers/solution/solution.controller';
+import { AgricultureController } from './controllers/agriculture/agriculture.controller';
 
 @Module({
     imports: [LoggerModule, ConfigModule.forRoot()],
-    controllers: [AppController, ChemicalsController, UserController, FertilizerController, SolutionController],
+    controllers: [AppController, ChemicalsController, UserController, FertilizerController, SolutionController, AgricultureController],
     providers: [AppService, DatabaseService, RegistrationService, TokenService]
 })
 export class AppModule {

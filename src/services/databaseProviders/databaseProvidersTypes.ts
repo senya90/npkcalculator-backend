@@ -3,7 +3,7 @@ import { UserDB } from "@dto/user/userDTO";
 import { RoleDB, RoleName } from "@models/role";
 import { TokensPair } from "@models/tokens";
 import { ChemicalComplex, ChemicalComplexDTO } from "@dto/chemical/chemicalComplex";
-import { Fertilizer, FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
+import { FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 import { SolutionDB, SolutionDTO } from "@dto/solution/solution";
 import { SolutionsUsingFertilizer } from "@dto/solution/solutionsUsingFertilizer";
