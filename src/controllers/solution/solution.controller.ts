@@ -66,6 +66,7 @@ export class SolutionController {
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
+                this.logger.log(`${getClassName(this)}#deleteSolution. Delete: ${solutionsIds}`)
                 const deletedSolutionsIds: string[] = await this.database.chemical.deleteSolutions(solutionsIds, userId)
                 this.logger.log(`${getClassName(this)}#deleteSolution. Deleted: ${deletedSolutionsIds}`)
                 return HelperResponse.getSuccessResponse(deletedSolutionsIds)

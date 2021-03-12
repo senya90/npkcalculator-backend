@@ -60,4 +60,27 @@ export class AgricultureController {
 
         return HelperResponse.getDBError()
     }
+
+    @Post('delete-agriculture')
+    @UseGuards(AuthGuard)
+    async deleteAgricultures(
+        @Body('ids') agriculturesIds: string[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                this.logger.log(`${getClassName(this)}#deleteSolution. UserID: ${userId} Delete: ${agriculturesIds}`)
+                const deletedAgriculturesIds = await this.database.chemical.deleteAgricultures(agriculturesIds, userId)
+                this.logger.log(`${getClassName(this)}#deleteAgricultures. Deleted: ${deletedAgriculturesIds}`)
+                return HelperResponse.getSuccessResponse(deletedAgriculturesIds)
+
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#deleteAgricultures error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
+            }
+        }
+
+        return HelperResponse.getDBError()
+    }
 }
