@@ -16,6 +16,8 @@ export const TABLES = {
     SOLUTION: 'SOLUTION',
     DOSAGE: 'DOSAGE',
 
+    AGRICULTURE: 'AGRICULTURE',
+
     ROLE: 'ROLE',
     USER: 'USER',
     TOKEN: 'TOKEN',

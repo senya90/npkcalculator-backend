@@ -23,7 +23,9 @@ export class AgricultureController {
     ): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                return HelperResponse.getSuccessResponse([])
+                const agriculturesDTO = await this.database.chemical.getAllAgricultures(userId)
+                this.logger.debug(`${getClassName(this)}#getAgricultures for user: ${userId}. Length: ${agriculturesDTO.length}`)
+                return HelperResponse.getSuccessResponse(agriculturesDTO)
             } catch (err) {
                 this.logger.error(`${getClassName(this)}#getAgricultures error: ${JSON.stringify(err)}`)
                 console.log(err)

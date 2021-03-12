@@ -1,4 +1,4 @@
-import { ChemicalUnitDto } from "@dto/chemicalUnitDto";
+import { ChemicalUnitDTO } from "@dto/chemical/chemicalUnit";
 import { UserDB } from "@dto/user/userDTO";
 import { RoleDB, RoleName } from "@models/role";
 import { TokensPair } from "@models/tokens";
@@ -7,13 +7,14 @@ import { FertilizerDB, FertilizerDTO } from "@dto/fertilizer/fertilizer";
 import { FertilizersUsingComplexes } from "@models/fertilizersUsingComplexes";
 import { SolutionDB, SolutionDTO } from "@dto/solution/solution";
 import { SolutionsUsingFertilizer } from "@dto/solution/solutionsUsingFertilizer";
+import { AgricultureDTO } from "@dto/agriculture/agriculture";
 
 export interface IDatabaseProvider {
     connect: (databaseName: string, databaseUrl: string) => Promise<any>
 }
 
 export interface IChemicalDatabaseProvider extends IDatabaseProvider {
-    getChemicals: () => Promise<ChemicalUnitDto[]>
+    getChemicals: () => Promise<ChemicalUnitDTO[]>
 
     getUserChemicalComplexes: (usersIds: string[]) => Promise<ChemicalComplexDTO[]>
     addComplexes: (chemicalComplexes: ChemicalComplex[], userId: string) => Promise<any>
@@ -37,6 +38,8 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     addSolutions: (solutionsDTO: SolutionDTO[], userId: string) => Promise<SolutionDB[]>
     deleteSolutions: (solutionsIds: string[], userId: string) => Promise<string[]>
     updateSolutions: (solutionsDTO: SolutionDTO[], userId: string) => Promise<SolutionDTO[]>
+
+    getAllAgricultures: (userId: string) => Promise<AgricultureDTO[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
