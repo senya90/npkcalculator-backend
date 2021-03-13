@@ -83,4 +83,27 @@ export class AgricultureController {
 
         return HelperResponse.getDBError()
     }
+
+    @Post('update-agriculture')
+    @UseGuards(AuthGuard)
+    async updateAgricultures(
+        @Body('agriculture') agriculturesDTO: AgricultureDTO[],
+        @GetUser() userId: string
+    ): Promise<HttpResponse> {
+        if (this.database.isReady()) {
+            try {
+                this.logger.log(`${getClassName(this)}#updateAgricultures. UserID: ${userId} Need to update: ${JSON.stringify(agriculturesDTO)}`)
+                const updatedAgricultures = await this.database.chemical.updateAgricultures(agriculturesDTO, userId)
+                this.logger.log(`${getClassName(this)}#updateAgricultures. Updated: ${JSON.stringify(updatedAgricultures)}`)
+                return HelperResponse.getSuccessResponse(updatedAgricultures)
+                
+            } catch (err) {
+                this.logger.error(`${getClassName(this)}#updateAgricultures error: ${JSON.stringify(err)}`)
+                console.log(err)
+                return HelperResponse.getServerError()
+            }
+        }
+
+        return HelperResponse.getDBError()
+    }
 }

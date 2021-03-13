@@ -42,6 +42,7 @@ export interface IChemicalDatabaseProvider extends IDatabaseProvider {
     getAllAgricultures: (userId: string) => Promise<AgricultureDTO[]>
     addAgricultures: (agriculturesDTO: AgricultureDTO[], userId: string) => Promise<AgricultureDTO[]>
     deleteAgricultures: (agriculturesIds: string[], userId: string) => Promise<string[]>
+    updateAgricultures: (agriculturesDTO: AgricultureDTO[], userId: string) => Promise<AgricultureDTO[]>
 }
 
 export interface IUserDatabaseProvider extends IDatabaseProvider {
