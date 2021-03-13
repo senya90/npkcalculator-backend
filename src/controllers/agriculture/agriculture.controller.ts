@@ -96,7 +96,7 @@ export class AgricultureController {
                 const updatedAgricultures = await this.database.chemical.updateAgricultures(agriculturesDTO, userId)
                 this.logger.log(`${getClassName(this)}#updateAgricultures. Updated: ${JSON.stringify(updatedAgricultures)}`)
                 return HelperResponse.getSuccessResponse(updatedAgricultures)
-                
+
             } catch (err) {
                 this.logger.error(`${getClassName(this)}#updateAgricultures error: ${JSON.stringify(err)}`)
                 console.log(err)
