@@ -5,8 +5,8 @@ import {
     IUserDatabaseProvider
 } from "../databaseProviders/databaseProvidersTypes";
 import { SqliteDatabaseProvider } from "@services/databaseProviders/sqliteDatabaseProvider/sqliteDatabaseProvider";
-import { databaseConfig } from 'src/config/databaseConfig';
 import { Logger } from '@modules/logger/service/logger';
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class DatabaseService implements IDatabase {
@@ -15,7 +15,8 @@ export class DatabaseService implements IDatabase {
     private isDBConnected = false
 
     constructor(
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly configService: ConfigService
     ) {
         const databaseProvider = new SqliteDatabaseProvider(this.logger)
         this.chemical = databaseProvider
@@ -23,8 +24,11 @@ export class DatabaseService implements IDatabase {
     }
 
     connectToDatabases(): Promise<any> {
+        const dbName = this.configService.get('DATABASE_NAME')
+        const dbPath = this.configService.get('DATABASE_PATH')
+
         return Promise.all([
-            this.chemical.connect(databaseConfig.databaseName, databaseConfig.databaseUrl)
+            this.chemical.connect(dbName, dbPath)
         ])
             .then(connects => {
                 this.isDBConnected = true

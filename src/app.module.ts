@@ -15,14 +15,19 @@ import { AgricultureController } from './controllers/agriculture/agriculture.con
 import {ServeStaticModule} from '@nestjs/serve-static'
 import {join} from 'path'
 
+const SPA_PATH = process.env.FRONTEND_INDEXHTML_PATH ?
+    join(process.env.FRONTEND_INDEXHTML_PATH.trim())
+    :
+    join(__dirname, '..', '..', 'npkcalculator', 'build')
+
 @Module({
     imports: [
         LoggerModule,
         ConfigModule.forRoot({
-            envFilePath: join(__dirname, '..', '.config')
+            envFilePath: join(__dirname, '..', '..', '.config')
         }),
         ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '..', 'frontend_build'),
+            rootPath: SPA_PATH,
         }),
     ],
     controllers: [AppController, ChemicalsController, UserController, FertilizerController, SolutionController, AgricultureController],
@@ -31,7 +36,8 @@ import {join} from 'path'
 export class AppModule {
     constructor(
         private readonly database: DatabaseService,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+
     ) {
         this.database.connectToDatabases()
             .then(() => {

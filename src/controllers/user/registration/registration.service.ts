@@ -12,7 +12,6 @@ export class RegistrationService {
     private SALT_ROUNDS = 11
 
     constructor(private readonly configService: ConfigService) {
-
         advancedSalt = this.configService.get('ADVANCED_SALT')
     }
 
