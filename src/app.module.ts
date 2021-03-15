@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import {ConfigModule} from "@nestjs/config"
 import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
 import { DatabaseService } from "./services/database/database.service";
 import { ChemicalsController } from "./controllers/chemicals/chemicals.controller";
 import { UserController } from "./controllers/user/user.controller";
@@ -13,11 +12,21 @@ import { FertilizerController } from './controllers/fertilizer/fertilizer.contro
 import { getClassName } from "@helpers/utils";
 import { SolutionController } from './controllers/solution/solution.controller';
 import { AgricultureController } from './controllers/agriculture/agriculture.controller';
+import {ServeStaticModule} from '@nestjs/serve-static'
+import {join} from 'path'
 
 @Module({
-    imports: [LoggerModule, ConfigModule.forRoot()],
+    imports: [
+        LoggerModule,
+        ConfigModule.forRoot({
+            envFilePath: join(__dirname, '..', '.config')
+        }),
+        ServeStaticModule.forRoot({
+            rootPath: join(__dirname, '..', 'frontend_build'),
+        }),
+    ],
     controllers: [AppController, ChemicalsController, UserController, FertilizerController, SolutionController, AgricultureController],
-    providers: [AppService, DatabaseService, RegistrationService, TokenService]
+    providers: [DatabaseService, RegistrationService, TokenService]
 })
 export class AppModule {
     constructor(
