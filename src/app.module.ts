@@ -18,7 +18,7 @@ import {join} from 'path'
 const SPA_PATH = process.env.FRONTEND_INDEXHTML_PATH ?
     join(process.env.FRONTEND_INDEXHTML_PATH.trim())
     :
-    join(__dirname, '..', '..', 'npkcalculator', 'build')
+    join(__dirname, '..', '..', 'frontend', 'build')
 
 @Module({
     imports: [

@@ -41,7 +41,18 @@ export const ErrorCode = (text = '') => {
             code: 6,
             message: 'Complexes used in fertilizers',
             text
-        }
+        },
+        incorrectRequestData: {
+            code: 7,
+            message: 'Incorrect request data',
+            text
+        },
+        nameAlreadyUse: {
+            code: 8,
+            message: 'This name is already in use. Enter another name',
+            text
+        },
+
     }
 }
 

@@ -7,7 +7,7 @@ import { Body, Post, Request, Controller, UseGuards } from "@nestjs/common";
 import { DatabaseService } from "@services/database/database.service";
 import { Logger } from "@modules/logger/service/logger";
 import { RegistrationService } from "./registration/registration.service";
-import { ErrorCode } from "@models/errorResponse";
+import { ErrorCode, ErrorResponse } from "@models/errorResponse";
 import { TokenService } from "./token/token.service";
 import { AuthGuard } from "../../guards/auth.guard";
 import { GetUser } from "../../customDecorator/getUser";
@@ -27,18 +27,30 @@ export class UserController {
     async registerUser(@Body() user: UserCredentials): Promise<HttpResponse> {
         if (this.database.isReady()) {
             try {
-                const role = await this.database.user.getRoleByName(ROLES.USER)
-                const userForDB: UserDB = await this.registrationService.prepareUserForDB(user, role.id)
-                await this.database.user.registerUser(userForDB)
-                const createdUser = await this.database.user.getUserByLogin(user.login)
-                const userDTO = this.registrationService.userDbToDto(createdUser)
+                if (user) {
+                    const registeredUser = await this.database.user.getUserByLogin(user.login)
 
-                if (userDTO) {
-                    this.logger.log(`${getClassName(this)}#registerUser. User created. Login: ${userDTO.login} ID: ${userDTO.id}`)
-                    return HelperResponse.getSuccessResponse(userDTO)
+                    if (registeredUser) {
+                        this.logger.log(`${getClassName(this)}#registerUser. Name - ${user.login} - is already use for user ${registeredUser.id}`)
+                        return HelperResponse.getErrorForInfo(ErrorCode(`name: ${user.login}`).nameAlreadyUse)
+                    }
+
+                    const role = await this.database.user.getRoleByName(ROLES.USER)
+                    const userForDB: UserDB = await this.registrationService.prepareUserForDB(user, role.id)
+                    await this.database.user.registerUser(userForDB)
+                    const createdUser = await this.database.user.getUserByLogin(user.login)
+                    const userDTO = this.registrationService.userDbToDto(createdUser)
+
+                    if (userDTO) {
+                        this.logger.log(`${getClassName(this)}#registerUser. User created. Login: ${userDTO.login} ID: ${userDTO.id}`)
+                        return HelperResponse.getSuccessResponse(userDTO)
+                    }
+
+                    return HelperResponse.getSuccessResponse({})
                 }
 
-                return HelperResponse.getSuccessResponse({})
+                return HelperResponse.getServerError(ErrorCode(`Server user registration error.`).incorrectRequestData)
+
             } catch (e) {
                 this.logger.error(`${getClassName(this)}#registerUser. Registration error: ${e.message}`)
                 return HelperResponse.getServerError(ErrorCode(`Server user registration error. ${e.message}`).internalServerError)
